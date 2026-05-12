@@ -1,53 +1,85 @@
 # Monetix Flutter
 
-**Monetix Flutter** is a production-ready monetization policy layer for Flutter apps. It goes beyond simple ad wrappers by orchestrating the relationship between ads, premium features, user consent, and rewarded incentives.
+[![pub package](https://img.shields.io/pub/v/monetix_flutter.svg)](https://pub.dev/packages/monetix_flutter)
+[![likes](https://img.shields.io/pub/likes/monetix_flutter.svg)](https://pub.dev/packages/monetix_flutter/score)
+[![popularity](https://img.shields.io/pub/popularity/monetix_flutter.svg)](https://pub.dev/packages/monetix_flutter/score)
+[![license](https://img.shields.io/github/license/stfleurs/monetix_flutter.svg)](https://github.com/stfleurs/monetix_flutter/blob/main/LICENSE)
+
+**Production-ready monetization orchestration for Flutter apps.**
+
+Handle ads, premium users, rewarded incentives, consent, analytics, and fallback strategies through one clean architecture layer.
+
+---
 
 ## Why Monetix?
 
-Most ad packages only provide widgets. Monetix provides a **policy layer** that helps you:
-- **Balance Revenue & UX**: Automatically suppress ads for premium users or during temporary "ad-free breaks."
-- **Resilient Fallbacks**: `MonetizedNativeAd` automatically falls back to standard Banners if high-value Native ads fail to load.
-- **Incentivized Retention**: Built-in logic for a "15-minute ad-free break" flow, encouraging users to watch rewarded ads to reduce frustration.
-- **Decoupled Architecture**: Use the interface-driven design to plug in your own analytics, remote configuration, and localization without scattering ad logic across your UI.
+Most ad packages are just widget wrappers. Monetix is a **policy engine** that manages the complex relationship between your revenue strategy and your user experience.
 
-## Features
+### The Problem
+- 🍝 **Spaghetti Logic**: Ad checks and premium suppression scattered across your UI.
+- 📉 **Revenue Loss**: High-value native ads failing and leaving empty spaces.
+- 😫 **Ad Fatigue**: Users getting frustrated with constant interruptions.
+- 🔒 **SDK Lock-in**: Hard to switch or mock ad providers for testing.
 
-- **Shield: Smart Native Ads**: High-performance native ads with automatic banner fallbacks and unified styling.
-- **Gift: Rewarded Ad-Free Breaks**: Out-of-the-box logic for temporary ad suppression, including persistence, rate limiting, and cooldowns.
-- **Scale: Policy Orchestration**: Centralized management of premium status, UMP consent, and feature toggles.
-- **Chart: Deep Analytics Hooks**: Built-in interfaces for logging requests, impressions, failures, and revenue to any backend.
-- **Globe: Localization-Agnostic**: All UI strings are provided through providers, ensuring zero dependencies on your app's l10n system.
+### The Monetix Solution
+- 🎯 **Centralized Policy**: One place to define ad-free rules and premium states.
+- 🛡️ **Resilient Fallbacks**: Automatic Native-to-Banner orchestration.
+- 🎁 **Incentivized UX**: Built-in "15-minute ad-free break" rewarded flow.
+- 🔌 **Interface-Driven**: Easily swap analytics, config, or status providers.
 
-## Getting Started
+---
 
-### 1. Add dependency
+## How it Works
 
-```yaml
-dependencies:
-  monetix_flutter:
-    path: ./packages/monetix_flutter
+```mermaid
+graph TD
+    A[User Opens Screen] --> B{Monetix Policy Engine}
+    B -- Yes --> C[Premium User?]
+    C -- No --> D{Reward Window Active?}
+    C -- Yes --> E[Suppress Ads]
+    D -- Yes --> E
+    D -- No --> F[Show MonetizedNativeAd]
+    F --> G{Native Load Failed?}
+    G -- Yes --> H[Automatic Fallback to Banner]
+    G -- No --> I[Display Native Ad]
 ```
 
-### 2. Implementation Modes
+---
 
-#### Quick Mode (Simple)
-Ideal for testing or smaller apps. Uses default console logging and simple ID configuration.
+## Quick Start
+
+### 1. Initialize
 
 ```dart
 await Monetix.initialize(
   bannerId: 'ca-app-pub-3940256099942544/6300978111',
-  interstitialId: 'ca-app-pub-3940256099942544/1033173712',
-  rewardedId: 'ca-app-pub-3940256099942544/5224354917',
   nativeId: 'ca-app-pub-3940256099942544/2247696110',
 );
+```
 
-// Access services globally
+### 2. Add Widgets
+
+```dart
+MonetizedNativeAd(
+  screen: 'home',
+  placement: 'main_feed',
+)
+```
+
+---
+
+## Implementation Modes
+
+### ⚡ Quick Mode
+Ideal for testing or simple apps. Uses default console logging and in-memory status.
+
+```dart
 final ads = Monetix.instance;
 final rewards = Monetix.rewarded;
 ```
 
-#### Advanced Mode (Interface-Driven)
-The recommended way for production apps. Implement the core interfaces to link your own services.
+### 🛠️ Advanced Mode
+For production apps. Implement the core interfaces to link your own services.
 
 ```dart
 class MyAdConfig extends IAdConfigProvider { ... }
@@ -61,19 +93,11 @@ await Monetix.initialize(
 );
 ```
 
-### 3. Use Widgets
-
-```dart
-MonetizedNativeAd(
-  screen: 'home',
-  placement: 'feed_top',
-  templateType: TemplateType.small,
-)
-```
+---
 
 ## Example App
 
-Check out the `example/` directory for a full demonstration of the "Ad-Free Break" flow, native fallbacks, and reactive premium suppression.
+The `/example` directory contains a professional demonstration of the **"Ad-Free Break"** flow, reactive premium suppression, and fallback orchestration.
 
 ## License
 
