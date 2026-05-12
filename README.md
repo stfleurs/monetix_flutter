@@ -11,38 +11,75 @@ Handle ads, premium users, rewarded incentives, consent, analytics, and fallback
 
 ---
 
+## Core Philosophy
+
+> **Monetix treats monetization as a product system — not just an ad SDK integration.**
+
+The goal is to maximize long-term revenue without degrading user experience. We believe that a happy user is a more valuable user, which is why Monetix prioritizes policy-driven ad suppression and incentivized "ad-free breaks" over mindless ad frequency.
+
+---
+
+## Architecture Overview
+
+Monetix sits as an orchestration layer between your App UI and the underlying Ad Providers.
+
+```mermaid
+graph TD
+    UI[Flutter App UI] --> Engine[Monetix Policy Engine]
+    
+    subgraph Engine [Monetix Orchestration Layer]
+        Policy[Ad Suppression Policy]
+        Rewarded[Rewarded Logic & Cooldowns]
+        Consent[UMP Consent Management]
+        Fallback[Smart Fallback Orchestrator]
+    end
+    
+    Engine --> Analytics[IAdAnalytics]
+    Engine --> Config[IAdConfigProvider]
+    Engine --> Status[IAdStatusProvider]
+    
+    Fallback --> AdMob[Google Mobile Ads]
+    Fallback --> Others[Future Provider Support]
+```
+
+---
+
+## The "Ad-Free Break" Flow
+
+Our signature feature: Let users "buy" time with a single rewarded ad, reducing fatigue and increasing engagement.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant M as Monetix
+    participant P as Ad Provider
+    
+    U->>M: Request Ad-Free Break
+    M->>M: Check Cooldown & Rate Limits
+    alt Is Blocked
+        M-->>U: Show Cooldown/Limit Message
+    else Is Available
+        M->>P: Load & Show Rewarded Ad
+        P-->>M: Reward Earned
+        M->>M: Grant 15-Minute Break
+        M->>M: Persist Expiry State
+        M-->>U: Notify: Ads Suppressed
+    end
+    
+    Note over U,M: All Native/Banner ads are now hidden
+```
+
+---
+
 ## Why Monetix?
 
 Most ad packages are just widget wrappers. Monetix is a **policy engine** that manages the complex relationship between your revenue strategy and your user experience.
 
-### The Problem
-- 🍝 **Spaghetti Logic**: Ad checks and premium suppression scattered across your UI.
-- 📉 **Revenue Loss**: High-value native ads failing and leaving empty spaces.
-- 😫 **Ad Fatigue**: Users getting frustrated with constant interruptions.
-- 🔒 **SDK Lock-in**: Hard to switch or mock ad providers for testing.
-
-### The Monetix Solution
-- 🎯 **Centralized Policy**: One place to define ad-free rules and premium states.
-- 🛡️ **Resilient Fallbacks**: Automatic Native-to-Banner orchestration.
-- 🎁 **Incentivized UX**: Built-in "15-minute ad-free break" rewarded flow.
-- 🔌 **Interface-Driven**: Easily swap analytics, config, or status providers.
-
----
-
-## How it Works
-
-```mermaid
-graph TD
-    A[User Opens Screen] --> B{Monetix Policy Engine}
-    B -- Yes --> C[Premium User?]
-    C -- No --> D{Reward Window Active?}
-    C -- Yes --> E[Suppress Ads]
-    D -- Yes --> E
-    D -- No --> F[Show MonetizedNativeAd]
-    F --> G{Native Load Failed?}
-    G -- Yes --> H[Automatic Fallback to Banner]
-    G -- No --> I[Display Native Ad]
-```
+### Problems Monetix Solves
+- 🍝 **Scattered Logic**: No more ad checks and premium suppression scattered across your UI.
+- 📉 **Revenue Leakage**: `MonetizedNativeAd` automatically falls back to Banners if high-value Native ads fail.
+- 😫 **User Frustration**: Handles the complex logic of rewarded breaks, rate limits, and cooldowns out of the box.
+- 🔓 **Provider Lock-in**: Interface-driven design lets you swap or mock providers easily.
 
 ---
 
@@ -52,8 +89,8 @@ graph TD
 
 ```dart
 await Monetix.initialize(
-  bannerId: 'ca-app-pub-3940256099942544/6300978111',
-  nativeId: 'ca-app-pub-3940256099942544/2247696110',
+  bannerId: '...',
+  nativeId: '...',
 );
 ```
 
@@ -73,31 +110,17 @@ MonetizedNativeAd(
 ### ⚡ Quick Mode
 Ideal for testing or simple apps. Uses default console logging and in-memory status.
 
-```dart
-final ads = Monetix.instance;
-final rewards = Monetix.rewarded;
-```
-
 ### 🛠️ Advanced Mode
-For production apps. Implement the core interfaces to link your own services.
-
-```dart
-class MyAdConfig extends IAdConfigProvider { ... }
-class MyAdAnalytics extends IAdAnalytics { ... }
-class MyAdStatus extends IAdStatusProvider { ... }
-
-await Monetix.initialize(
-  config: MyAdConfig(),
-  analytics: MyAdAnalytics(),
-  status: MyAdStatus(),
-);
-```
+For production apps. Implement the core interfaces to link your own services (Remote Config, Firebase Analytics, RevenueCat, etc).
 
 ---
 
 ## Example App
 
-The `/example` directory contains a professional demonstration of the **"Ad-Free Break"** flow, reactive premium suppression, and fallback orchestration.
+The `/example` directory contains a professional demonstration of:
+- **Reactive Premium Suppression**: Watch ads disappear instantly when status changes.
+- **Smart Fallbacks**: Native ads transitioning to Banners seamlessly.
+- **Incentivized Flow**: A fully working "Ad-Free Break" sheet.
 
 ## License
 
