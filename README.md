@@ -85,22 +85,110 @@ Most ad packages are just widget wrappers. Monetix is a **strategy engine** that
 
 ## Quick Start
 
-### 1. Initialize
+### 1. Install
 
-```dart
-await Monetix.initialize(
-  bannerId: '...',
-  nativeId: '...',
-);
+```yaml
+dependencies:
+  monetix_flutter: ^0.0.1
 ```
 
-### 2. Add Widgets
+### 2. Implement the Interfaces
+
+Create a class that implements `IAdStatusProvider` (e.g., wrapping RevenueCat) and `IAdConfigProvider` (e.g., wrapping Firebase Remote Config).
+
+Both interfaces extend `Listenable`, so your implementation **must** also extend `ChangeNotifier` (or another `Listenable`) to enable reactive UI updates.
 
 ```dart
-MonetizedNativeAd(
-  screen: 'home',
-  placement: 'main_feed',
-)
+class MyPremiumStatus extends ChangeNotifier implements IAdStatusProvider {
+  bool _isPremium = false;
+  final _controller = StreamController<bool>.broadcast();
+
+  @override bool get isPremium => _isPremium;
+  @override Stream<bool> get premiumStatusStream => _controller.stream;
+
+  void onSubscriptionChanged(bool isPremium) {
+    _isPremium = isPremium;
+    _controller.add(isPremium);
+    notifyListeners(); // Triggers UI rebuild
+  }
+
+  // ... implement remaining label/string getters
+}
+```
+
+### 3. Wire Up the Provider Tree
+
+Use `ListenableProxyProvider` to expose your implementations as the Monetix interfaces. This is what enables **reactive premium suppression** — ads disappear the instant `notifyListeners()` is called.
+
+```dart
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Provider.debugCheckInvalidValueType = null; // Required for interface injection
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        // 1. Your status provider (e.g. RevenueCat)
+        ChangeNotifierProvider<MyPremiumStatus>(
+          create: (_) => MyPremiumStatus(),
+        ),
+        // Expose as interface — use ListenableProxyProvider for reactivity
+        ListenableProxyProvider<MyPremiumStatus, IAdStatusProvider>(
+          update: (_, status, __) => status,
+        ),
+
+        // 2. Your config provider (e.g. Firebase Remote Config)
+        ChangeNotifierProvider<MyAdConfig>(
+          create: (_) => MyAdConfig(),
+        ),
+        ListenableProxyProvider<MyAdConfig, IAdConfigProvider>(
+          update: (_, config, __) => config,
+        ),
+
+        // 3. Analytics (optional)
+        Provider<IAdAnalytics>(create: (_) => ConsoleAdAnalytics()),
+
+        // 4. Rewarded Ad Service
+        ChangeNotifierProxyProvider2<MyAdConfig, IAdAnalytics, RewardedMonetizationService>(
+          create: (ctx) => RewardedMonetizationService(
+            ctx.read<MyAdConfig>(),
+            analyticsService: ctx.read<IAdAnalytics>(),
+          ),
+          update: (_, __, ___, prev) => prev!,
+        ),
+
+        // 5. Main Orchestrator
+        Provider<MonetizationService>(
+          create: (ctx) {
+            final svc = MonetizationService(
+              ctx.read<MyAdConfig>(),
+              statusProvider: ctx.read<MyPremiumStatus>(),
+              analyticsService: ctx.read<IAdAnalytics>(),
+              rewardedAdService: ctx.read<RewardedMonetizationService>(),
+            );
+            svc.init();
+            return svc;
+          },
+        ),
+      ],
+      child: MaterialApp(home: MyHomePage()),
+    );
+  }
+}
+```
+
+### 4. Add Widgets
+
+```dart
+// Automatically hides when user is premium or in an ad-free break
+MonetizedNativeAd(screen: 'home', placement: 'main_feed')
+
+// Standalone banner (falls back gracefully if native fails)
+MonetizedBannerAd(screen: 'home', placement: 'footer')
 ```
 
 ---

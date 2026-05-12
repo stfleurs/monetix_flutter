@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
+import '../interfaces/i_ad_status_provider.dart';
 import 'monetization_service.dart';
 
 enum RewardBlockReason {
@@ -26,6 +27,7 @@ class RewardedMonetizationService extends ChangeNotifier {
   final IAdConfigProvider _configProvider;
   final MonetizationService? _monetizationService;
   final IAdAnalytics? _analyticsService;
+  final IAdStatusProvider? _statusProvider;
   
   RewardedAd? _rewardedAd;
   bool _isLoading = false;
@@ -45,10 +47,12 @@ class RewardedMonetizationService extends ChangeNotifier {
   RewardedMonetizationService(
     this._configProvider, {
     MonetizationService? monetizationService,
+    IAdStatusProvider? statusProvider,
     IAdAnalytics? analyticsService,
     bool autoLoad = true,
     DateTime Function()? nowProvider,
   })  : _monetizationService = monetizationService,
+        _statusProvider = statusProvider,
         _analyticsService = analyticsService,
         _autoLoad = autoLoad,
         _nowProvider = nowProvider ?? (() => DateTime.now()) {
@@ -119,6 +123,11 @@ class RewardedMonetizationService extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> _init() async {
+    // Premium users: skip all ad initialization entirely.
+    if (_statusProvider?.isPremium == true) {
+      if (!_initCompleter.isCompleted) _initCompleter.complete();
+      return;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       _highWaterMarkMs = prefs.getInt(_prefHwm) ?? 0;
@@ -139,6 +148,8 @@ class RewardedMonetizationService extends ChangeNotifier {
   }
 
   Future<void> loadRewardedAd({bool isManual = false}) async {
+    // Never load ads for premium users.
+    if (_statusProvider?.isPremium == true) return;
     if (_isLoading || _rewardedAd != null) return;
     
     if (isManual) {

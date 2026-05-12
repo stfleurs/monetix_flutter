@@ -29,6 +29,19 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   bool _hasLoggedImpression = false;
   DateTime? _loadStartTime;
   int? _loadDurationMs;
+  StreamSubscription<bool>? _premiumSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final statusProvider = Provider.of<IAdStatusProvider>(context, listen: false);
+      _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
+        if (mounted) setState(() {});
+      });
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -133,6 +146,7 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
 
   @override
   void dispose() {
+    _premiumSubscription?.cancel();
     _bannerAd?.dispose();
     super.dispose();
   }

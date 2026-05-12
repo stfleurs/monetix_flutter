@@ -61,10 +61,25 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
   int? _bannerLoadDurationMs;
 
   Brightness? _currentBrightness;
+  StreamSubscription<bool>? _premiumSubscription;
 
   bool _canRetry() {
     if (_lastFailureTime == null) return true;
     return DateTime.now().difference(_lastFailureTime!) > const Duration(seconds: 30);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Subscribe directly to the premium stream so ads react regardless of
+    // how the host app has set up its Provider tree.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final statusProvider = Provider.of<IAdStatusProvider>(context, listen: false);
+      _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
+        if (mounted) setState(() {});
+      });
+    });
   }
 
   @override
@@ -350,6 +365,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
 
   @override
   void dispose() {
+    _premiumSubscription?.cancel();
     _nativeAd?.dispose();
     _fallbackBannerAd?.dispose();
     super.dispose();
@@ -477,4 +493,5 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
       );
     }
   }
+
 }

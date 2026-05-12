@@ -47,6 +47,7 @@ class MonetixPlaygroundApp extends StatelessWidget {
         ChangeNotifierProxyProvider2<DebugAdConfig, IAdAnalytics, RewardedMonetizationService>(
           create: (context) => RewardedMonetizationService(
             context.read<DebugAdConfig>(),
+            statusProvider: context.read<RevenueCatAdStatusProvider>(),
             analyticsService: context.read<IAdAnalytics>(),
           ),
           update: (_, config, analytics, previous) => previous!,
