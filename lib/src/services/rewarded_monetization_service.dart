@@ -30,6 +30,7 @@ class RewardedMonetizationService extends ChangeNotifier {
   RewardedAd? _rewardedAd;
   bool _isLoading = false;
   bool _isShowing = false;
+  bool _isOffline = false;
   bool _hasLoggedImpression = false;
   int? _lastLoadDurationMs;
   Timer? _expiryTimer;
@@ -119,17 +120,25 @@ class RewardedMonetizationService extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> _init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _highWaterMarkMs = prefs.getInt(_prefHwm) ?? 0;
-    _cachedExpiryMs = prefs.getInt(_prefExpiry);
-    _cachedWatchTimes = _decodeWatchTimes(prefs.getString(_prefWatchTimes));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _highWaterMarkMs = prefs.getInt(_prefHwm) ?? 0;
+      _cachedExpiryMs = prefs.getInt(_prefExpiry);
+      _cachedWatchTimes = _decodeWatchTimes(prefs.getString(_prefWatchTimes));
+      
+      final connectivityResult = await Connectivity().checkConnectivity();
+      _isOffline = connectivityResult.contains(ConnectivityResult.none);
 
-    _scheduleExpiryNotify();
-    notifyListeners();
-    if (_autoLoad) {
-      await loadRewardedAd();
+      _scheduleExpiryNotify();
+      notifyListeners();
+      if (_autoLoad) {
+        await loadRewardedAd();
+      }
+    } catch (e) {
+      debugPrint('⚠️ Monetix: Error during RewardedMonetizationService init (likely unsupported platform): $e');
+    } finally {
+      if (!_initCompleter.isCompleted) _initCompleter.complete();
     }
-    if (!_initCompleter.isCompleted) _initCompleter.complete();
   }
 
   Future<void> loadRewardedAd({bool isManual = false}) async {

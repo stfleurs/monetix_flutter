@@ -15,3 +15,6 @@ export 'src/services/monetix_facade.dart';
 export 'src/widgets/monetized_native_ad.dart';
 export 'src/widgets/monetized_banner_ad.dart';
 export 'src/widgets/reward_status_sheet.dart';
+
+// Re-export common types from dependencies
+export 'package:google_mobile_ads/google_mobile_ads.dart' show TemplateType;

@@ -5,15 +5,15 @@
 [![popularity](https://img.shields.io/pub/popularity/monetix_flutter.svg)](https://pub.dev/packages/monetix_flutter/score)
 [![license](https://img.shields.io/github/license/stfleurs/monetix_flutter.svg)](https://github.com/stfleurs/monetix_flutter/blob/main/LICENSE)
 
-**Production-ready monetization orchestration for Flutter apps.**
+**The Monetization Orchestration Ecosystem for Flutter.**
 
-Handle ads, premium users, rewarded incentives, consent, analytics, and fallback strategies through one clean architecture layer.
+Monetix is not just an ad SDK wrapper — it's a policy-driven orchestration layer that manages the complex relationship between your revenue strategy, your user experience, and your premium states.
 
 ---
 
 ## Core Philosophy
 
-> **Monetix treats monetization as a product system — not just an ad SDK integration.**
+> **Monetix treats monetization as a product system — not just an implementation detail.**
 
 The goal is to maximize long-term revenue without degrading user experience. We believe that a happy user is a more valuable user, which is why Monetix prioritizes policy-driven ad suppression and incentivized "ad-free breaks" over mindless ad frequency.
 
@@ -25,18 +25,18 @@ Monetix sits as an orchestration layer between your App UI and the underlying Ad
 
 ```mermaid
 graph TD
-    UI[Flutter App UI] --> Engine[Monetix Policy Engine]
+    UI[Flutter App UI] --> EngineNode[Monetix Policy Engine]
     
-    subgraph Engine [Monetix Orchestration Layer]
+    subgraph EngineSub ["Monetix Orchestration Layer"]
         Policy[Ad Suppression Policy]
         Rewarded[Rewarded Logic & Cooldowns]
         Consent[UMP Consent Management]
         Fallback[Smart Fallback Orchestrator]
     end
     
-    Engine --> Analytics[IAdAnalytics]
-    Engine --> Config[IAdConfigProvider]
-    Engine --> Status[IAdStatusProvider]
+    EngineNode --> Analytics[IAdAnalytics]
+    EngineNode --> Config[IAdConfigProvider]
+    EngineNode --> Status[IAdStatusProvider]
     
     Fallback --> AdMob[Google Mobile Ads]
     Fallback --> Others[Future Provider Support]
@@ -73,13 +73,13 @@ sequenceDiagram
 
 ## Why Monetix?
 
-Most ad packages are just widget wrappers. Monetix is a **policy engine** that manages the complex relationship between your revenue strategy and your user experience.
+Most ad packages are just widget wrappers. Monetix is a **strategy engine** that lets you define *how* and *when* ads appear based on real-time app state.
 
 ### Problems Monetix Solves
 - 🍝 **Scattered Logic**: No more ad checks and premium suppression scattered across your UI.
 - 📉 **Revenue Leakage**: `MonetizedNativeAd` automatically falls back to Banners if high-value Native ads fail.
 - 😫 **User Frustration**: Handles the complex logic of rewarded breaks, rate limits, and cooldowns out of the box.
-- 🔓 **Provider Lock-in**: Interface-driven design lets you swap or mock providers easily.
+- 🔓 **Provider Lock-in**: Interface-driven design lets you swap or mock providers (AdMob, RevenueCat, Custom) easily.
 
 ---
 
@@ -111,16 +111,20 @@ MonetizedNativeAd(
 Ideal for testing or simple apps. Uses default console logging and in-memory status.
 
 ### 🛠️ Advanced Mode
-For production apps. Implement the core interfaces to link your own services (Remote Config, Firebase Analytics, RevenueCat, etc).
+For production apps. Implement the core interfaces to link your own services:
+- **Remote Config**: Manage IDs and frequencies remotely.
+- **Analytics**: Connect Firebase, Mixpanel, or Amplitude.
+- **RevenueCat**: React to subscription states instantly.
 
 ---
 
-## Example App
+## Monetix Playground
 
-The `/example` directory contains a professional demonstration of:
+The `/example` directory contains an **Interactive Showcase App** demonstrating:
 - **Reactive Premium Suppression**: Watch ads disappear instantly when status changes.
 - **Smart Fallbacks**: Native ads transitioning to Banners seamlessly.
 - **Incentivized Flow**: A fully working "Ad-Free Break" sheet.
+- **Debug Control Center**: Toggle states live to test your app's behavior.
 
 ## License
 

@@ -21,8 +21,6 @@ class MonetizationService {
   bool _isLoading = false;
   bool _isPremium = false;
   StreamSubscription<bool>? _premiumSubscription;
-  int _loadAttempts = 0;
-  static const int _maxAttempts = 3;
 
   String? _currentScreen;
   String? _currentPlacement;
@@ -164,37 +162,37 @@ class MonetizationService {
       placement: _currentPlacement ?? 'background_preload',
     );
 
-    InterstitialAd.load(
-      adUnitId: adUnitId,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          if (_loadStartTime != null) {
-            _lastLoadDurationMs = DateTime.now().difference(_loadStartTime!).inMilliseconds;
-          }
-          _interstitialAd = ad;
-          _isLoading = false;
-          _loadAttempts = 0;
-          _attachFullScreenCallbacks(ad);
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          debugPrint('[MonetizationService] Interstitial failed: ${error.message}');
-          _analyticsService?.logAdFailure(
-            adType: 'interstitial',
-            adUnitId: adUnitId,
-            errorCode: error.code.toString(),
-            screen: _currentScreen ?? 'background_preload',
-            placement: _currentPlacement ?? 'background_preload',
-          );
-
-          _interstitialAd = null;
-          _isLoading = false;
-          if (_loadAttempts < _maxAttempts) {
-            Future.delayed(const Duration(seconds: 2), loadInterstitialAd);
-          }
-        },
-      ),
-    );
+    try {
+      InterstitialAd.load(
+        adUnitId: adUnitId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (InterstitialAd ad) {
+            if (_loadStartTime != null) {
+              _lastLoadDurationMs = DateTime.now().difference(_loadStartTime!).inMilliseconds;
+            }
+            _interstitialAd = ad;
+            _isLoading = false;
+            _loadAttempts = 0;
+            _attachFullScreenCallbacks(ad);
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            _isLoading = false;
+            _interstitialAd = null;
+            _analyticsService?.logAdFailure(
+              adType: 'interstitial',
+              adUnitId: adUnitId,
+              errorCode: error.message,
+              screen: _currentScreen ?? 'background_preload',
+              placement: _currentPlacement ?? 'background_preload',
+            );
+          },
+        ),
+      );
+    } catch (e) {
+      debugPrint('⚠️ Monetix: InterstitialAd not supported on this platform: $e');
+      _isLoading = false;
+    }
   }
 
   void _attachFullScreenCallbacks(InterstitialAd ad) {

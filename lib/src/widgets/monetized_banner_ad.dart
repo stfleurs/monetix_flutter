@@ -75,57 +75,60 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
       placement: widget.placement,
     );
 
-    _bannerAd = BannerAd(
-      adUnitId: adUnitId,
-      request: const AdRequest(),
-      size: size,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (_loadStartTime != null) {
-            _loadDurationMs =
-                DateTime.now().difference(_loadStartTime!).inMilliseconds;
-          }
-          setState(() {
-            _adLoaded = true;
-          });
-        },
-        onAdImpression: (ad) {
-          if (!_hasLoggedImpression) {
-            analyticsService.logAdImpression(
+    try {
+      _bannerAd = BannerAd(
+        adUnitId: adUnitId,
+        request: const AdRequest(),
+        size: size,
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            if (_loadStartTime != null) {
+              _loadDurationMs =
+                  DateTime.now().difference(_loadStartTime!).inMilliseconds;
+            }
+            setState(() {
+              _adLoaded = true;
+            });
+          },
+          onAdImpression: (ad) {
+            if (!_hasLoggedImpression) {
+              analyticsService.logAdImpression(
+                adType: 'banner',
+                adUnitId: ad.adUnitId,
+                screen: widget.screen,
+                placement: widget.placement,
+                loadDurationMs: _loadDurationMs,
+              );
+              _hasLoggedImpression = true;
+            }
+          },
+          onAdFailedToLoad: (ad, error) {
+            ad.dispose();
+            _bannerAd = null;
+            analyticsService.logAdFailure(
+              adType: 'banner',
+              adUnitId: adUnitId,
+              errorCode: error.message,
+              screen: widget.screen,
+              placement: widget.placement,
+            );
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            analyticsService.logAdRevenue(
+              value: valueMicros / 1000000.0,
+              currency: currencyCode,
               adType: 'banner',
               adUnitId: ad.adUnitId,
               screen: widget.screen,
               placement: widget.placement,
-              loadDurationMs: _loadDurationMs,
             );
-            _hasLoggedImpression = true;
-          }
-        },
-        onAdFailedToLoad: (ad, err) {
-          analyticsService.logAdFailure(
-            adType: 'banner',
-            adUnitId: ad.adUnitId,
-            errorCode: err.code.toString(),
-            screen: widget.screen,
-            placement: widget.placement,
-          );
-          ad.dispose();
-          _hasLoggedImpression = false;
-        },
-        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          analyticsService.logAdRevenue(
-            value: valueMicros / 1000000.0,
-            currency: currencyCode,
-            adType: 'banner',
-            adUnitId: ad.adUnitId,
-            screen: widget.screen,
-            placement: widget.placement,
-          );
-        },
-      ),
-    );
-
-    await _bannerAd!.load();
+          },
+        ),
+      );
+      _bannerAd?.load();
+    } catch (e) {
+      debugPrint('⚠️ Monetix: BannerAd not supported on this platform: $e');
+    }
   }
 
   @override

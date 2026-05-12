@@ -158,11 +158,12 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
       placement: widget.placement,
     );
 
-    _nativeAd = NativeAd(
-      adUnitId: adUnitId,
-      request: const AdRequest(),
-      listener: NativeAdListener(
-        onAdLoaded: (ad) {
+    try {
+      _nativeAd = NativeAd(
+        adUnitId: adUnitId,
+        request: const AdRequest(),
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
           if (_nativeLoadStartTime != null) {
             _nativeLoadDurationMs = DateTime.now().difference(_nativeLoadStartTime!).inMilliseconds;
           }
@@ -243,9 +244,15 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
           size: 12.0,
         ),
       ),
-    );
-
-    await _nativeAd!.load();
+      );
+      _nativeAd?.load();
+    } catch (e) {
+      debugPrint('⚠️ Monetix: NativeAd not supported on this platform: $e');
+      if (isSafe) {
+        setState(() => _nativeFailed = true);
+        _loadFallbackBanner();
+      }
+    }
 
     Future.delayed(const Duration(seconds: 5), () {
       if (isSafe && !_adLoaded && !_nativeFailed && !_isLoading) {
