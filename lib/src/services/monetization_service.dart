@@ -21,6 +21,7 @@ class MonetizationService {
   bool _isLoading = false;
   bool _isPremium = false;
   StreamSubscription<bool>? _premiumSubscription;
+  int _loadAttempts = 0;
 
   String? _currentScreen;
   String? _currentPlacement;
