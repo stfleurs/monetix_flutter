@@ -7,6 +7,7 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import '../services/rewarded_monetization_service.dart';
 import 'monetized_native_ad.dart'; // For SafeState mixin
+import 'reward_status_sheet.dart';
 
 class MonetizedBannerAd extends StatefulWidget {
   final String screen;
@@ -163,7 +164,7 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
           Padding(
             padding: const EdgeInsets.only(bottom: 1, right: 4),
             child: GestureDetector(
-              onTap: () => statusProvider.showPurchaseScreen(context),
+              onTap: () => showRewardStatusSheet(context),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

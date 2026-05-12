@@ -8,6 +8,7 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import '../services/monetization_service.dart';
 import '../services/rewarded_monetization_service.dart';
+import 'reward_status_sheet.dart';
 
 mixin SafeState<T extends StatefulWidget> on State<T> {
   bool get isSafe => mounted;
@@ -410,7 +411,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
     Widget buildOptOutButton() {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => statusProvider.showPurchaseScreen(context),
+        onTap: () => showRewardStatusSheet(context),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
