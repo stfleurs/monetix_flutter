@@ -1,0 +1,197 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
+import '../interfaces/i_ad_analytics.dart';
+import '../interfaces/i_ad_config_provider.dart';
+import '../interfaces/i_ad_status_provider.dart';
+import '../services/rewarded_monetization_service.dart';
+import 'monetized_native_ad.dart'; // For SafeState mixin
+
+class MonetizedBannerAd extends StatefulWidget {
+  final String screen;
+  final String placement;
+
+  const MonetizedBannerAd({
+    super.key,
+    required this.screen,
+    required this.placement,
+  });
+
+  @override
+  MonetizedBannerAdState createState() => MonetizedBannerAdState();
+}
+
+class MonetizedBannerAdState extends State<MonetizedBannerAd>
+    with SafeState<MonetizedBannerAd> {
+  BannerAd? _bannerAd;
+  bool _adLoaded = false;
+  bool _hasLoggedImpression = false;
+  DateTime? _loadStartTime;
+  int? _loadDurationMs;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final configProvider = Provider.of<IAdConfigProvider>(context);
+    final rewardedAdService = Provider.of<RewardedMonetizationService>(context);
+    final statusProvider = Provider.of<IAdStatusProvider>(context);
+
+    final shouldShow = configProvider.adsEnabled &&
+        !statusProvider.isPremium &&
+        !rewardedAdService.isAdFree;
+
+    if (shouldShow && !_adLoaded) {
+      _loadBannerAd();
+    } else if (!shouldShow && _adLoaded) {
+      _disposeBanner();
+    }
+  }
+
+  void _disposeBanner() {
+    _bannerAd?.dispose();
+    _bannerAd = null;
+    setState(() => _adLoaded = false);
+  }
+
+  Future<void> _loadBannerAd() async {
+    final configProvider =
+        Provider.of<IAdConfigProvider>(context, listen: false);
+    final analyticsService = Provider.of<IAdAnalytics>(context, listen: false);
+    final adUnitId = configProvider.bannerAdUnitId ??
+        'ca-app-pub-3940256099942544/6300978111'; // Test ID
+
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+        MediaQuery.of(context).size.width.truncate());
+
+    if (!isSafe || size == null) return;
+
+    _loadStartTime = DateTime.now();
+    analyticsService.logAdRequest(
+      adType: 'banner',
+      adUnitId: adUnitId,
+      screen: widget.screen,
+      placement: widget.placement,
+    );
+
+    _bannerAd = BannerAd(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      size: size,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (_loadStartTime != null) {
+            _loadDurationMs =
+                DateTime.now().difference(_loadStartTime!).inMilliseconds;
+          }
+          setState(() {
+            _adLoaded = true;
+          });
+        },
+        onAdImpression: (ad) {
+          if (!_hasLoggedImpression) {
+            analyticsService.logAdImpression(
+              adType: 'banner',
+              adUnitId: ad.adUnitId,
+              screen: widget.screen,
+              placement: widget.placement,
+              loadDurationMs: _loadDurationMs,
+            );
+            _hasLoggedImpression = true;
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          analyticsService.logAdFailure(
+            adType: 'banner',
+            adUnitId: ad.adUnitId,
+            errorCode: err.code.toString(),
+            screen: widget.screen,
+            placement: widget.placement,
+          );
+          ad.dispose();
+          _hasLoggedImpression = false;
+        },
+        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+          analyticsService.logAdRevenue(
+            value: valueMicros / 1000000.0,
+            currency: currencyCode,
+            adType: 'banner',
+            adUnitId: ad.adUnitId,
+            screen: widget.screen,
+            placement: widget.placement,
+          );
+        },
+      ),
+    );
+
+    await _bannerAd!.load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_adLoaded && _bannerAd != null) {
+      final statusProvider = Provider.of<IAdStatusProvider>(context);
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 1, right: 4),
+            child: GestureDetector(
+              onTap: () => statusProvider.showPurchaseScreen(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.block_rounded,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      statusProvider.pauseAdsLabel,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          ),
+        ],
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+  }
+}

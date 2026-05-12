@@ -1,0 +1,22 @@
+name: monetix_flutter_example
+description: Demonstrates how to use the monetix_flutter package.
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  monetix_flutter:
+    path: ../
+  provider: ^6.0.5
+  google_mobile_ads: ^7.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
