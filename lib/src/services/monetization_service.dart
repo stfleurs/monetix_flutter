@@ -22,6 +22,7 @@ class MonetizationService {
   bool _isPremium = false;
   StreamSubscription<bool>? _premiumSubscription;
   int _loadAttempts = 0;
+  static const int _maxAttempts = 3;
 
   String? _currentScreen;
   String? _currentPlacement;
@@ -187,6 +188,10 @@ class MonetizationService {
               screen: _currentScreen ?? 'background_preload',
               placement: _currentPlacement ?? 'background_preload',
             );
+
+            if (_loadAttempts < _maxAttempts) {
+              Future.delayed(const Duration(seconds: 5), loadInterstitialAd);
+            }
           },
         ),
       );

@@ -30,7 +30,6 @@ class RewardedMonetizationService extends ChangeNotifier {
   RewardedAd? _rewardedAd;
   bool _isLoading = false;
   bool _isShowing = false;
-  bool _isOffline = false;
   bool _hasLoggedImpression = false;
   int? _lastLoadDurationMs;
   Timer? _expiryTimer;
@@ -127,7 +126,7 @@ class RewardedMonetizationService extends ChangeNotifier {
       _cachedWatchTimes = _decodeWatchTimes(prefs.getString(_prefWatchTimes));
       
       final connectivityResult = await Connectivity().checkConnectivity();
-      _isOffline = connectivityResult.contains(ConnectivityResult.none);
+      // No longer using _isOffline snapshot
 
       _scheduleExpiryNotify();
       notifyListeners();

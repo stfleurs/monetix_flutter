@@ -51,8 +51,8 @@ class RevenueCatAdStatusProvider extends ChangeNotifier implements IAdStatusProv
 
 class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
   bool _adsEnabled = true;
-  String _bannerId = 'ca-app-pub-3940256099942544/6300978111';
-  String _nativeId = 'ca-app-pub-3940256099942544/2247696110';
+  final String _bannerId = 'ca-app-pub-3940256099942544/6300978111';
+  final String _nativeId = 'ca-app-pub-3940256099942544/2247696110';
 
   @override bool get adsEnabled => _adsEnabled;
   @override String? get bannerAdUnitId => _bannerId;

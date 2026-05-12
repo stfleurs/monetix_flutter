@@ -80,7 +80,7 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.deepPurple.withOpacity(0.1),
+        color: Colors.deepPurple.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -125,7 +125,7 @@ class HomeScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.deepPurple.withOpacity(0.1),
+          backgroundColor: Colors.deepPurple.withValues(alpha: 0.1),
           child: Icon(icon, color: Colors.deepPurple),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
