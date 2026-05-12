@@ -21,6 +21,10 @@ The goal is to maximize long-term revenue without degrading user experience. We 
 
 ## Showcase
 
+### 🎥 Live Reactive Demo
+![Reactive Demo](media/monetix_demo.webp)
+
+### 📸 Component Gallery
 | Playground Home | Rewarded Break | Debug Control Center |
 | :---: | :---: | :---: |
 | ![Home](media/monetix_home.png) | ![Rewarded](media/monetix_rewarded.png) | ![Debug](media/monetix_debug.png) |
