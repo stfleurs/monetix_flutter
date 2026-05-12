@@ -19,6 +19,14 @@ The goal is to maximize long-term revenue without degrading user experience. We 
 
 ---
 
+## Showcase
+
+| Playground Home | Rewarded Break | Debug Control Center |
+| :---: | :---: | :---: |
+| ![Home](media/monetix_home.png) | ![Rewarded](media/monetix_rewarded.png) | ![Debug](media/monetix_debug.png) |
+
+---
+
 ## Architecture Overview
 
 Monetix sits as an orchestration layer between your App UI and the underlying Ad Providers.
