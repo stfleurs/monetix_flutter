@@ -1,4 +1,6 @@
-abstract class IAdConfigProvider {
+import 'package:flutter/foundation.dart';
+
+abstract class IAdConfigProvider extends Listenable {
   String? get bannerAdUnitId;
   String? get interstitialAdUnitId;
   String? get rewardedAdUnitId;

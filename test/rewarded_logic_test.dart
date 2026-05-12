@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetix_flutter/monetix_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MockConfig extends IAdConfigProvider {
+class MockConfig extends ChangeNotifier implements IAdConfigProvider {
   @override String? get bannerAdUnitId => null;
   @override String? get interstitialAdUnitId => null;
   @override String? get rewardedAdUnitId => null;

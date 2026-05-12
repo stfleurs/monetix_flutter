@@ -5,13 +5,17 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 
 /// A simple configuration provider that takes IDs as parameters.
-class SimpleAdConfig extends IAdConfigProvider {
+class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
   @override final String? bannerAdUnitId;
   @override final String? interstitialAdUnitId;
   @override final String? rewardedAdUnitId;
   @override final String? nativeAdUnitId;
   @override final bool adsEnabled;
   @override final List<String> testDeviceIds;
+  @override final Duration rewardAdFreeDuration;
+  @override final int maxAdsPerRateLimitWindow;
+  @override final Duration rateLimitWindowDuration;
+  @override final Duration cooldownBetweenAdsDuration;
 
   SimpleAdConfig({
     this.bannerAdUnitId,
@@ -20,6 +24,10 @@ class SimpleAdConfig extends IAdConfigProvider {
     this.nativeAdUnitId,
     this.adsEnabled = true,
     this.testDeviceIds = const [],
+    this.rewardAdFreeDuration = const Duration(minutes: 15),
+    this.maxAdsPerRateLimitWindow = 2,
+    this.rateLimitWindowDuration = const Duration(hours: 1),
+    this.cooldownBetweenAdsDuration = const Duration(seconds: 35),
   });
 }
 

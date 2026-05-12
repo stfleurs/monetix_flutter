@@ -125,8 +125,6 @@ class RewardedMonetizationService extends ChangeNotifier {
       _cachedExpiryMs = prefs.getInt(_prefExpiry);
       _cachedWatchTimes = _decodeWatchTimes(prefs.getString(_prefWatchTimes));
       
-      final connectivityResult = await Connectivity().checkConnectivity();
-      // No longer using _isOffline snapshot
 
       _scheduleExpiryNotify();
       notifyListeners();

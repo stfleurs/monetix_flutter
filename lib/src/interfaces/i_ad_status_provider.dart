@@ -1,4 +1,6 @@
-abstract class IAdStatusProvider {
+import 'package:flutter/foundation.dart';
+
+abstract class IAdStatusProvider extends Listenable {
   /// Returns true if the user has purchased a premium/pro version and should not see ads.
   bool get isPremium;
 

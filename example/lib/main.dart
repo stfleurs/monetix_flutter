@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  Provider.debugCheckInvalidValueType = null;
   runApp(const MonetixPlaygroundApp());
 }
 
@@ -23,7 +24,7 @@ class MonetixPlaygroundApp extends StatelessWidget {
         ),
         
         // Expose as interface for the framework widgets
-        ProxyProvider<RevenueCatAdStatusProvider, IAdStatusProvider>(
+        ListenableProxyProvider<RevenueCatAdStatusProvider, IAdStatusProvider>(
           update: (_, status, __) => status,
         ),
         
@@ -33,7 +34,7 @@ class MonetixPlaygroundApp extends StatelessWidget {
         ),
 
         // Expose as interface
-        ProxyProvider<DebugAdConfig, IAdConfigProvider>(
+        ListenableProxyProvider<DebugAdConfig, IAdConfigProvider>(
           update: (_, config, __) => config,
         ),
         
