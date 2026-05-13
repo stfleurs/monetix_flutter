@@ -98,7 +98,7 @@ Most ad packages are just widget wrappers. Monetix is a **strategy engine** that
 
 ```yaml
 dependencies:
-  monetix_flutter: ^0.0.1
+  monetix_flutter: ^0.1.1
 ```
 
 ### 2. Implement the Interfaces

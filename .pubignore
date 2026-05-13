@@ -1,0 +1,7 @@
+# Exclude built APKs from pub.dev uploads
+*.apk
+*.ipa
+
+# Exclude local Android signing files
+example/android/upload-keystore.jks
+example/android/key.properties
