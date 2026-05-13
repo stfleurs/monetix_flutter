@@ -1,3 +1,9 @@
+## 0.1.0
+- **Stable Release**: First feature-complete production-ready release.
+- **Orchestrated Fallback Readiness**: Parallel loading of native ads and banner fallbacks for instant, zero-delay switching.
+- **Enhanced Debug Simulation**: Added `simulateNativeFailure` to `IAdConfigProvider` for easier testing of fallback flows.
+- **Improved Reactivity**: Native ads now respond instantly to debug simulation toggles in real-time.
+
 ## 0.0.1
 
 * Initial release of **Monetix Flutter**.

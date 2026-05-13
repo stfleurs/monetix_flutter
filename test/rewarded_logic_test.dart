@@ -16,6 +16,7 @@ class MockConfig extends ChangeNotifier implements IAdConfigProvider {
   @override int get maxAdsPerRateLimitWindow => 2;
   @override Duration get rateLimitWindowDuration => const Duration(hours: 1);
   @override Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);
+  @override bool get simulateNativeFailure => false;
 }
 
 void main() {

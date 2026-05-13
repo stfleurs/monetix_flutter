@@ -31,6 +31,14 @@ class DebugPanelScreen extends StatelessWidget {
             value: config.adsEnabled,
             onChanged: (val) => config.setAdsEnabled(val),
           ),
+
+          _buildSectionHeader('Orchestration & Fallback'),
+          SwitchListTile(
+            title: const Text('Simulate Native Failure'),
+            subtitle: const Text('Instantly switch to preloaded banner'),
+            value: config.simulateNativeFailure,
+            onChanged: (val) => config.setSimulateNativeFailure(val),
+          ),
           
           const Divider(),
           const Padding(

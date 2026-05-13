@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
@@ -37,25 +36,26 @@ class MonetizedNativeAd extends StatefulWidget {
   MonetizedNativeAdState createState() => MonetizedNativeAdState();
 }
 
-class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<MonetizedNativeAd> {
+class MonetizedNativeAdState extends State<MonetizedNativeAd>
+    with SafeState<MonetizedNativeAd> {
   NativeAd? _nativeAd;
   BannerAd? _fallbackBannerAd;
   bool _adLoaded = false;
   bool _bannerLoaded = false;
-  
+
   bool _isLoading = false;
   bool _isBannerLoading = false;
   bool _hasLoggedImpression = false;
   bool _hasLoggedBannerImpression = false;
-  
+
   int _retryCount = 0;
   int _bannerRetryCount = 0;
   static const int _maxRetries = 3;
   static const int _maxBannerRetries = 3;
-  
+
   bool _nativeFailed = false;
   DateTime? _lastFailureTime;
-  
+
   DateTime? _nativeLoadStartTime;
   int? _nativeLoadDurationMs;
   DateTime? _bannerLoadStartTime;
@@ -66,7 +66,8 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
 
   bool _canRetry() {
     if (_lastFailureTime == null) return true;
-    return DateTime.now().difference(_lastFailureTime!) > const Duration(seconds: 30);
+    return DateTime.now().difference(_lastFailureTime!) >
+        const Duration(seconds: 30);
   }
 
   @override
@@ -76,7 +77,8 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
     // how the host app has set up its Provider tree.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final statusProvider = Provider.of<IAdStatusProvider>(context, listen: false);
+      final statusProvider =
+          Provider.of<IAdStatusProvider>(context, listen: false);
       _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
         if (mounted) setState(() {});
       });
@@ -86,35 +88,34 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     final statusProvider = Provider.of<IAdStatusProvider>(context);
     final rewardedAdService = Provider.of<RewardedMonetizationService>(context);
     final configProvider = Provider.of<IAdConfigProvider>(context);
-    
-    final currentBrightness = Theme.of(context).brightness;
-    final shouldHideAds = statusProvider.isPremium || rewardedAdService.isAdFree;
 
-    if ((_adLoaded || _bannerLoaded) && _currentBrightness != currentBrightness) {
+    final currentBrightness = Theme.of(context).brightness;
+    final shouldHideAds =
+        statusProvider.isPremium || rewardedAdService.isAdFree;
+
+    if ((_adLoaded || _bannerLoaded) &&
+        _currentBrightness != currentBrightness) {
       _disposeAds();
       _loadNativeAd();
       return;
     }
 
-    if (!shouldHideAds &&
-        configProvider.adsEnabled &&
-        !_adLoaded &&
-        !_bannerLoaded &&
-        !_isLoading &&
-        !_isBannerLoading &&
-        _nativeAd == null &&
-        _fallbackBannerAd == null &&
-        _canRetry()) {
+    if (!shouldHideAds && configProvider.adsEnabled && _canRetry()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (isSafe && !_isLoading) {
+        if (!isSafe) return;
+        if (!_adLoaded && !_isLoading && _nativeAd == null) {
           _loadNativeAd();
         }
+        if (!_bannerLoaded && !_isBannerLoading && _fallbackBannerAd == null) {
+          _loadFallbackBanner();
+        }
       });
-    } else if (shouldHideAds && (_nativeAd != null || _fallbackBannerAd != null)) {
+    } else if (shouldHideAds &&
+        (_nativeAd != null || _fallbackBannerAd != null)) {
       _disposeAds();
     }
   }
@@ -136,23 +137,19 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
   }
 
   Future<void> _loadNativeAd() async {
-    final configProvider = Provider.of<IAdConfigProvider>(context, listen: false);
-    final adUnitId = configProvider.nativeAdUnitId ?? 'ca-app-pub-3940256099942544/2247696110'; // Test ID
-    
+    final configProvider =
+        Provider.of<IAdConfigProvider>(context, listen: false);
+    final adUnitId = configProvider.nativeAdUnitId ??
+        'ca-app-pub-3940256099942544/2247696110'; // Test ID
+
     if (adUnitId.isEmpty) return;
 
-    final monetizationService = Provider.of<MonetizationService>(context, listen: false);
+    final monetizationService =
+        Provider.of<MonetizationService>(context, listen: false);
     final analyticsService = Provider.of<IAdAnalytics>(context, listen: false);
     final theme = Theme.of(context);
-    
-    final prefs = await SharedPreferences.getInstance();
+
     if (!isSafe) return;
-    
-    if (prefs.getBool('debug_force_banner_ad') ?? false) {
-      setState(() => _nativeFailed = true);
-      _loadFallbackBanner();
-      return;
-    }
 
     setState(() {
       _isLoading = true;
@@ -180,100 +177,100 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
         request: const AdRequest(),
         listener: NativeAdListener(
           onAdLoaded: (ad) {
-          if (_nativeLoadStartTime != null) {
-            _nativeLoadDurationMs = DateTime.now().difference(_nativeLoadStartTime!).inMilliseconds;
-          }
-          setState(() {
-            _adLoaded = true;
-            _isLoading = false;
-            _retryCount = 0;
-          });
-        },
-        onAdImpression: (ad) {
-          if (!_hasLoggedImpression) {
-            analyticsService.logAdImpression(
+            if (_nativeLoadStartTime != null) {
+              _nativeLoadDurationMs = DateTime.now()
+                  .difference(_nativeLoadStartTime!)
+                  .inMilliseconds;
+            }
+            setState(() {
+              _adLoaded = true;
+              _isLoading = false;
+              _retryCount = 0;
+            });
+          },
+          onAdImpression: (ad) {
+            if (!_hasLoggedImpression) {
+              analyticsService.logAdImpression(
+                adType: 'native',
+                adUnitId: ad.adUnitId,
+                screen: widget.screen,
+                placement: widget.placement,
+                loadDurationMs: _nativeLoadDurationMs,
+              );
+              _hasLoggedImpression = true;
+            }
+          },
+          onAdFailedToLoad: (ad, error) {
+            analyticsService.logAdFailure(
+              adType: 'native',
+              adUnitId: ad.adUnitId,
+              errorCode: error.code.toString(),
+              screen: widget.screen,
+              placement: widget.placement,
+            );
+            ad.dispose();
+            if (isSafe) {
+              setState(() => _isLoading = false);
+              if (_retryCount < _maxRetries) {
+                _retryCount++;
+                Future.delayed(Duration(seconds: _retryCount * 5), () {
+                  if (isSafe && !_adLoaded && !_isLoading && !_nativeFailed)
+                    _loadNativeAd();
+                });
+              } else {
+                setState(() => _nativeFailed = true);
+              }
+            }
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            analyticsService.logAdRevenue(
+              value: valueMicros / 1000000.0,
+              currency: currencyCode,
               adType: 'native',
               adUnitId: ad.adUnitId,
               screen: widget.screen,
               placement: widget.placement,
-              loadDurationMs: _nativeLoadDurationMs,
             );
-            _hasLoggedImpression = true;
-          }
-        },
-        onAdFailedToLoad: (ad, error) {
-          analyticsService.logAdFailure(
-            adType: 'native',
-            adUnitId: ad.adUnitId,
-            errorCode: error.code.toString(),
-            screen: widget.screen,
-            placement: widget.placement,
-          );
-          ad.dispose();
-          if (isSafe) {
-            setState(() => _isLoading = false);
-            if (_retryCount < _maxRetries) {
-              _retryCount++;
-              Future.delayed(Duration(seconds: _retryCount * 5), () {
-                if (isSafe && !_adLoaded && !_isLoading && !_nativeFailed) _loadNativeAd();
-              });
-            } else {
-              setState(() => _nativeFailed = true);
-              _loadFallbackBanner();
-            }
-          }
-        },
-        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          analyticsService.logAdRevenue(
-            value: valueMicros / 1000000.0,
-            currency: currencyCode,
-            adType: 'native',
-            adUnitId: ad.adUnitId,
-            screen: widget.screen,
-            placement: widget.placement,
-          );
-        },
-      ),
-      nativeTemplateStyle: NativeTemplateStyle(
-        templateType: widget.templateType,
-        mainBackgroundColor: theme.cardColor,
-        cornerRadius: 24.0,
-        callToActionTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.white,
-          backgroundColor: theme.colorScheme.primary,
-          style: NativeTemplateFontStyle.bold,
-          size: 16.0,
+          },
         ),
-        primaryTextStyle: NativeTemplateTextStyle(
-          textColor: theme.colorScheme.onSurface,
-          style: NativeTemplateFontStyle.bold,
-          size: 16.0,
+        nativeTemplateStyle: NativeTemplateStyle(
+          templateType: widget.templateType,
+          mainBackgroundColor: theme.cardColor,
+          cornerRadius: 24.0,
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: theme.colorScheme.primary,
+            style: NativeTemplateFontStyle.bold,
+            size: 16.0,
+          ),
+          primaryTextStyle: NativeTemplateTextStyle(
+            textColor: theme.colorScheme.onSurface,
+            style: NativeTemplateFontStyle.bold,
+            size: 16.0,
+          ),
+          secondaryTextStyle: NativeTemplateTextStyle(
+            textColor: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            style: NativeTemplateFontStyle.normal,
+            size: 14.0,
+          ),
+          tertiaryTextStyle: NativeTemplateTextStyle(
+            textColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            style: NativeTemplateFontStyle.normal,
+            size: 12.0,
+          ),
         ),
-        secondaryTextStyle: NativeTemplateTextStyle(
-          textColor: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-          style: NativeTemplateFontStyle.normal,
-          size: 14.0,
-        ),
-        tertiaryTextStyle: NativeTemplateTextStyle(
-          textColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-          style: NativeTemplateFontStyle.normal,
-          size: 12.0,
-        ),
-      ),
       );
       _nativeAd?.load();
     } catch (e) {
       debugPrint('⚠️ Monetix: NativeAd not supported on this platform: $e');
       if (isSafe) {
         setState(() => _nativeFailed = true);
-        _loadFallbackBanner();
       }
     }
 
     Future.delayed(const Duration(seconds: 5), () {
       if (isSafe && !_adLoaded && !_nativeFailed && !_isLoading) {
-         setState(() => _nativeFailed = true);
-         _loadFallbackBanner();
+        setState(() => _nativeFailed = true);
       }
     });
   }
@@ -281,15 +278,19 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
   Future<void> _loadFallbackBanner() async {
     if (_isBannerLoading || _bannerLoaded) return;
 
-    final configProvider = Provider.of<IAdConfigProvider>(context, listen: false);
-    final adUnitId = configProvider.bannerAdUnitId ?? 'ca-app-pub-3940256099942544/6300978111';
-    
+    final configProvider =
+        Provider.of<IAdConfigProvider>(context, listen: false);
+    final adUnitId = configProvider.bannerAdUnitId ??
+        'ca-app-pub-3940256099942544/6300978111';
+
     if (adUnitId.isEmpty) return;
 
     final analyticsService = Provider.of<IAdAnalytics>(context, listen: false);
     setState(() => _isBannerLoading = true);
 
-    final size = widget.templateType == TemplateType.small ? AdSize.largeBanner : AdSize.mediumRectangle;
+    final size = widget.templateType == TemplateType.small
+        ? AdSize.largeBanner
+        : AdSize.mediumRectangle;
 
     _bannerLoadStartTime = DateTime.now();
     analyticsService.logAdRequest(
@@ -306,7 +307,8 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           if (_bannerLoadStartTime != null) {
-            _bannerLoadDurationMs = DateTime.now().difference(_bannerLoadStartTime!).inMilliseconds;
+            _bannerLoadDurationMs =
+                DateTime.now().difference(_bannerLoadStartTime!).inMilliseconds;
           }
           setState(() {
             _bannerLoaded = true;
@@ -339,12 +341,13 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
           if (isSafe) {
             setState(() => _isBannerLoading = false);
             if (_bannerRetryCount < _maxBannerRetries) {
-               _bannerRetryCount++;
-               Future.delayed(Duration(seconds: _bannerRetryCount * 5), () {
-                 if (isSafe && !_bannerLoaded && !_isBannerLoading) _loadFallbackBanner();
-               });
+              _bannerRetryCount++;
+              Future.delayed(Duration(seconds: _bannerRetryCount * 5), () {
+                if (isSafe && !_bannerLoaded && !_isBannerLoading)
+                  _loadFallbackBanner();
+              });
             } else {
-               _lastFailureTime = DateTime.now();
+              _lastFailureTime = DateTime.now();
             }
           }
         },
@@ -376,16 +379,19 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
   Widget build(BuildContext context) {
     final statusProvider = Provider.of<IAdStatusProvider>(context);
     final rewardedAdService = Provider.of<RewardedMonetizationService>(context);
-    
+
     if (statusProvider.isPremium || rewardedAdService.isAdFree) {
       return const SizedBox.shrink();
     }
 
+    final configProvider = Provider.of<IAdConfigProvider>(context);
+    final simulateFailure = configProvider.simulateNativeFailure;
     final isMedium = widget.templateType == TemplateType.medium;
 
     Widget buildContainer({required Widget child}) {
       return Container(
-        margin: EdgeInsets.symmetric(horizontal: isMedium ? 12 : 8, vertical: 0),
+        margin:
+            EdgeInsets.symmetric(horizontal: isMedium ? 12 : 8, vertical: 0),
         height: isMedium ? 350 : 105,
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -398,7 +404,8 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
             ),
           ],
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.05),
+            color:
+                Theme.of(context).colorScheme.outline.withValues(alpha: 0.05),
           ),
         ),
         child: ClipRRect(
@@ -466,7 +473,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
                 child: buildContainer(child: adContent),
               ),
               Positioned(
-                top: 0, 
+                top: 0,
                 right: isMedium ? 12 : 8,
                 child: buildOptOutButton(),
               ),
@@ -476,9 +483,15 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
       );
     }
 
-    if (_adLoaded && _nativeAd != null) {
+    final showNative =
+        _adLoaded && _nativeAd != null && !simulateFailure && !_nativeFailed;
+    final showBanner = _bannerLoaded &&
+        _fallbackBannerAd != null &&
+        (simulateFailure || _nativeFailed);
+
+    if (showNative) {
       return buildAdWrapper(AdWidget(ad: _nativeAd!));
-    } else if (_bannerLoaded && _fallbackBannerAd != null) {
+    } else if (showBanner) {
       return buildAdWrapper(
         Center(
           child: SizedBox(
@@ -494,5 +507,4 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd> with SafeState<Mon
       );
     }
   }
-
 }

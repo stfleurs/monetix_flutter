@@ -51,10 +51,12 @@ class RevenueCatAdStatusProvider extends ChangeNotifier implements IAdStatusProv
 
 class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
   bool _adsEnabled = true;
+  bool _simulateNativeFailure = false;
   final String _bannerId = 'ca-app-pub-3940256099942544/6300978111';
   final String _nativeId = 'ca-app-pub-3940256099942544/2247696110';
 
   @override bool get adsEnabled => _adsEnabled;
+  @override bool get simulateNativeFailure => _simulateNativeFailure;
   @override String? get bannerAdUnitId => _bannerId;
   @override String? get nativeAdUnitId => _nativeId;
   @override String? get interstitialAdUnitId => 'ca-app-pub-3940256099942544/1033173712';
@@ -63,6 +65,11 @@ class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
 
   void setAdsEnabled(bool value) {
     _adsEnabled = value;
+    notifyListeners();
+  }
+
+  void setSimulateNativeFailure(bool value) {
+    _simulateNativeFailure = value;
     notifyListeners();
   }
 

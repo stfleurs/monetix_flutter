@@ -16,6 +16,7 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
   @override final int maxAdsPerRateLimitWindow;
   @override final Duration rateLimitWindowDuration;
   @override final Duration cooldownBetweenAdsDuration;
+  @override final bool simulateNativeFailure;
 
   SimpleAdConfig({
     this.bannerAdUnitId,
@@ -28,6 +29,7 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
     this.maxAdsPerRateLimitWindow = 2,
     this.rateLimitWindowDuration = const Duration(hours: 1),
     this.cooldownBetweenAdsDuration = const Duration(seconds: 35),
+    this.simulateNativeFailure = false,
   });
 }
 

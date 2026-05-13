@@ -73,7 +73,7 @@ class NativeAdsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Try toggling "Force Ad Failure" in the Debug Panel to see these Native ads transition to Banner fallbacks live.',
+                    'Try toggling "Simulate Native Failure" in the Debug Panel to see these Native ads transition to Banner fallbacks instantly.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13),
                   ),

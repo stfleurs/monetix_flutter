@@ -17,4 +17,7 @@ abstract class IAdConfigProvider extends Listenable {
   int get maxAdsPerRateLimitWindow => 2;
   Duration get rateLimitWindowDuration => const Duration(hours: 1);
   Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);
+
+  /// Debug/Simulation: Force the UI to show the fallback banner instead of the native ad.
+  bool get simulateNativeFailure => false;
 }
