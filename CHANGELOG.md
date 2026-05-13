@@ -1,4 +1,4 @@
-## 0.1.0
+## 0.1.1
 - **Stable Release**: First feature-complete production-ready release.
 - **Orchestrated Fallback Readiness**: Parallel loading of native ads and banner fallbacks for instant, zero-delay switching.
 - **Enhanced Debug Simulation**: Added `simulateNativeFailure` to `IAdConfigProvider` for easier testing of fallback flows.
