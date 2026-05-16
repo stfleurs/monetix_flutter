@@ -5,7 +5,9 @@
 [![popularity](https://img.shields.io/pub/popularity/monetix_flutter.svg)](https://pub.dev/packages/monetix_flutter/score)
 [![license](https://img.shields.io/github/license/stfleurs/monetix_flutter.svg)](https://github.com/stfleurs/monetix_flutter/blob/main/LICENSE)
 
-![Monetix Showcase](media/monetix.gif)
+<p align="center">
+  <img src="media/monetix.gif" width="450" alt="Monetix Showcase">
+</p>
 
 **The Monetization Orchestration Ecosystem for Flutter.**
 
