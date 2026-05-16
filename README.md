@@ -11,11 +11,50 @@ Monetix is not just an ad SDK wrapper — it's a policy-driven orchestration lay
 
 ---
 
+## ⏱️ 30-Second Integration
+
+Monetix works out of the box, but becomes exponentially more powerful when connected to your premium state and remote config systems. To start simple:
+
+```dart
+MonetizedBannerAd(
+  screen: 'home',
+  placement: 'footer',
+)
+```
+
+---
+
 ## Core Philosophy
 
 > **Monetix treats monetization as a product system — not just an implementation detail.**
 
 The goal is to maximize long-term revenue without degrading user experience. We believe that a happy user is a more valuable user, which is why Monetix prioritizes policy-driven ad suppression and incentivized "ad-free breaks" over mindless ad frequency.
+
+---
+
+## Best For
+
+Monetix is ideal for:
+- freemium apps,
+- utility apps,
+- content apps,
+- apps with subscriptions + ads,
+- apps needing dynamic monetization policies.
+
+Not ideal for:
+- extremely simple apps needing only one banner ad.
+
+---
+
+## Real-World Scenario
+
+Orchestration systems become easier to understand through workflows. Here is a typical Monetix scenario:
+
+- **Free users** see ads.
+- **Premium users** instantly suppress ads.
+- **Rewarded users** get 15 ad-free minutes.
+- **Native ads** fallback to banners automatically.
+- **Remote config** controls ad frequency.
 
 ---
 
@@ -84,6 +123,16 @@ sequenceDiagram
 
 Most ad packages are just widget wrappers. Monetix is a **strategy engine** that lets you define *how* and *when* ads appear based on real-time app state.
 
+### Why not just use Google Mobile Ads directly?
+
+| Problem | Raw AdMob | Monetix |
+| --- | --- | --- |
+| **Premium suppression** | Manual | Built-in |
+| **Rewarded cooldowns** | Manual | Built-in |
+| **Ad-free breaks** | Manual | Built-in |
+| **Centralized policies** | ❌ | ✅ |
+| **Runtime monetization config** | Limited | ✅ |
+
 ### Problems Monetix Solves
 - 🍝 **Scattered Logic**: No more ad checks and premium suppression scattered across your UI.
 - 📉 **Revenue Leakage**: `MonetizedNativeAd` automatically falls back to Banners if high-value Native ads fail.
@@ -92,13 +141,51 @@ Most ad packages are just widget wrappers. Monetix is a **strategy engine** that
 
 ---
 
-## Quick Start
+## Onboarding Paths
 
-### 1. Install
+### Path 1: Simple Setup (5 minutes)
+Ideal for basic apps with minimal config.
+
+#### 1. Install
 
 ```yaml
 dependencies:
-  monetix_flutter: ^0.1.1
+  monetix_flutter: ^0.1.2
+```
+
+#### 2. Initialize
+
+```dart
+import 'package:monetix_flutter/monetix_flutter.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Monetix.initialize(
+    bannerId: 'ca-app-pub-...',
+    nativeId: 'ca-app-pub-...',
+  );
+
+  runApp(const MyApp());
+}
+```
+
+#### 3. Add Widgets
+
+```dart
+MonetizedBannerAd(screen: 'home', placement: 'footer')
+```
+
+---
+
+### Path 2: Production Setup
+Ideal for apps with RevenueCat, Firebase Remote Config, analytics, and complex orchestration.
+
+#### 1. Install
+
+```yaml
+dependencies:
+  monetix_flutter: ^0.1.2
 ```
 
 ### 2. Implement the Interfaces

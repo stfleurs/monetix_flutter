@@ -1,3 +1,6 @@
+## 0.1.3
+- **Documentation**: Substantial README overhaul. Added "30-Second Integration" guide, comparison with raw AdMob, and split onboarding paths for Simple vs Production setups.
+
 ## 0.1.2
 - **Dependencies**: Update `google_mobile_ads` to `^8.0.0` and `connectivity_plus` to `^7.1.1`.
 - **Maintenance**: Fix linting warnings including the deprecated `getCurrentOrientationAnchoredAdaptiveBannerAdSize` and missing block enclosures.
