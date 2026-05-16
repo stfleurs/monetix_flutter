@@ -76,7 +76,7 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
     final adUnitId = configProvider.bannerAdUnitId ??
         'ca-app-pub-3940256099942544/6300978111'; // Test ID
 
-    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+    final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(
         MediaQuery.of(context).size.width.truncate());
 
     if (!isSafe || size == null) return;

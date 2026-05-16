@@ -1,6 +1,6 @@
 name: monetix_flutter
 description: A production-ready monetization policy layer for Flutter. Manages ads, premium state, consent, and rewarded ad-free breaks.
-version: 0.1.1
+version: 0.1.2
 repository: https://github.com/stfleurs/monetix_flutter
 
 environment:
@@ -10,10 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_mobile_ads: ^7.0.0
+  google_mobile_ads: ^8.0.0
   shared_preferences: ^2.2.0
   provider: ^6.0.5
-  connectivity_plus: ^6.0.1
+  connectivity_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,7 @@
+## 0.1.2
+- **Dependencies**: Update `google_mobile_ads` to `^8.0.0` and `connectivity_plus` to `^7.1.1`.
+- **Maintenance**: Fix linting warnings including the deprecated `getCurrentOrientationAnchoredAdaptiveBannerAdSize` and missing block enclosures.
+
 ## 0.1.1
 - **Stable Release**: First feature-complete production-ready release.
 - **Orchestrated Fallback Readiness**: Parallel loading of native ads and banner fallbacks for instant, zero-delay switching.

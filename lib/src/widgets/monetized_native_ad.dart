@@ -214,8 +214,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
               if (_retryCount < _maxRetries) {
                 _retryCount++;
                 Future.delayed(Duration(seconds: _retryCount * 5), () {
-                  if (isSafe && !_adLoaded && !_isLoading && !_nativeFailed)
+                  if (isSafe && !_adLoaded && !_isLoading && !_nativeFailed) {
                     _loadNativeAd();
+                  }
                 });
               } else {
                 setState(() => _nativeFailed = true);
@@ -343,8 +344,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
             if (_bannerRetryCount < _maxBannerRetries) {
               _bannerRetryCount++;
               Future.delayed(Duration(seconds: _bannerRetryCount * 5), () {
-                if (isSafe && !_bannerLoaded && !_isBannerLoading)
+                if (isSafe && !_bannerLoaded && !_isBannerLoading) {
                   _loadFallbackBanner();
+                }
               });
             } else {
               _lastFailureTime = DateTime.now();
