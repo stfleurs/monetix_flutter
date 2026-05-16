@@ -13,6 +13,7 @@ class MockConfig extends ChangeNotifier implements IAdConfigProvider {
   @override List<String> get testDeviceIds => [];
   
   @override Duration get rewardAdFreeDuration => const Duration(minutes: 15);
+  @override bool get enableRewardedBreak => true;
   @override int get maxAdsPerRateLimitWindow => 2;
   @override Duration get rateLimitWindowDuration => const Duration(hours: 1);
   @override Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);

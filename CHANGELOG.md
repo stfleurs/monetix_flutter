@@ -1,3 +1,11 @@
+## 0.1.4
+- **Developer Tools**: Added `MonetixDebugPanel`, `MonetixDebugButton`, and `MonetixAdminGate` for easier production testing.
+- **Flexibility**: Added `enableRewardedBreak` toggle to globally disable the rewarded ad break feature.
+- **Reactivity**: Made `SimpleAdConfig` and `BasicAdStatus` mutable to support live configuration updates during testing.
+- **UI/UX**: Improved Reward Status Sheet layout with a more prominent "Premium" upgrade path.
+- **Documentation**: Restructured docs into a layered system with a streamlined README and a new `/docs` folder for advanced setups.
+- **Fixes**: Corrected missing `statusProvider` wire-up in `Monetix.initialize`.
+
 ## 0.1.3
 - **Documentation**: Substantial README overhaul. Added "30-Second Integration" guide, comparison with raw AdMob, and split onboarding paths for Simple vs Production setups.
 

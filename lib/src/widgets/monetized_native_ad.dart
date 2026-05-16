@@ -463,6 +463,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     }
 
     Widget buildAdWrapper(Widget adContent) {
+      final configProvider = Provider.of<IAdConfigProvider>(context);
+      final showOptOut = configProvider.enableRewardedBreak;
+
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -474,11 +477,12 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
                 padding: const EdgeInsets.only(top: 11),
                 child: buildContainer(child: adContent),
               ),
-              Positioned(
-                top: 0,
-                right: isMedium ? 12 : 8,
-                child: buildOptOutButton(),
-              ),
+              if (showOptOut)
+                Positioned(
+                  top: 0,
+                  right: isMedium ? 12 : 8,
+                  child: buildOptOutButton(),
+                ),
             ],
           ),
         ],

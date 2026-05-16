@@ -13,6 +13,7 @@ abstract class IAdConfigProvider extends Listenable {
   List<String> get testDeviceIds => ['EMULATOR'];
 
   /// Reward Policy Configuration
+  bool get enableRewardedBreak => true;
   Duration get rewardAdFreeDuration => const Duration(minutes: 15);
   int get maxAdsPerRateLimitWindow => 2;
   Duration get rateLimitWindowDuration => const Duration(hours: 1);

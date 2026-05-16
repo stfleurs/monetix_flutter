@@ -1,4 +1,10 @@
-# Exclude built APKs from pub.dev uploads
+# Exclude build artifacts
+build/
+.dart_tool/
+.flutter-plugins-dependencies
+.DS_Store
+
+# Exclude large APKs
 *.apk
 *.ipa
 

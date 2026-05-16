@@ -52,15 +52,29 @@ class RevenueCatAdStatusProvider extends ChangeNotifier implements IAdStatusProv
 class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
   bool _adsEnabled = true;
   bool _simulateNativeFailure = false;
+  bool _enableRewardedBreak = true;
   final String _bannerId = 'ca-app-pub-3940256099942544/6300978111';
   final String _nativeId = 'ca-app-pub-3940256099942544/2247696110';
 
   @override bool get adsEnabled => _adsEnabled;
   @override bool get simulateNativeFailure => _simulateNativeFailure;
+  @override bool get enableRewardedBreak => _enableRewardedBreak;
   @override String? get bannerAdUnitId => _bannerId;
   @override String? get nativeAdUnitId => _nativeId;
-  @override String? get interstitialAdUnitId => 'ca-app-pub-3940256099942544/1033173712';
-  @override String? get rewardedAdUnitId => 'ca-app-pub-3940256099942544/5224354917';
+  String? _interstitialId = 'ca-app-pub-3940256099942544/1033173712';
+  @override String? get interstitialAdUnitId => _interstitialId;
+  
+  void setInterstitialId(String? value) {
+    _interstitialId = value;
+    notifyListeners();
+  }
+  String? _rewardedId = 'ca-app-pub-3940256099942544/5224354917';
+  @override String? get rewardedAdUnitId => _rewardedId;
+  
+  void setRewardedId(String? value) {
+    _rewardedId = value;
+    notifyListeners();
+  }
   @override List<String> get testDeviceIds => [];
 
   void setAdsEnabled(bool value) {
@@ -70,6 +84,11 @@ class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
 
   void setSimulateNativeFailure(bool value) {
     _simulateNativeFailure = value;
+    notifyListeners();
+  }
+
+  void setEnableRewardedBreak(bool value) {
+    _enableRewardedBreak = value;
     notifyListeners();
   }
 

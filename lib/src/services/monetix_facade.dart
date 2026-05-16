@@ -37,6 +37,7 @@ class Monetix {
     String? nativeId,
     List<String> testDeviceIds = const [],
     bool adsEnabled = true,
+    bool enableRewardedBreak = true,
   }) async {
     final configProvider = config ?? SimpleAdConfig(
       bannerAdUnitId: bannerId,
@@ -44,6 +45,7 @@ class Monetix {
       rewardedAdUnitId: rewardedId,
       nativeAdUnitId: nativeId,
       adsEnabled: adsEnabled,
+      enableRewardedBreak: enableRewardedBreak,
       testDeviceIds: testDeviceIds,
     );
 
@@ -52,6 +54,7 @@ class Monetix {
 
     _rewardedInstance = RewardedMonetizationService(
       configProvider,
+      statusProvider: statusProvider,
       analyticsService: analyticsService,
     );
 

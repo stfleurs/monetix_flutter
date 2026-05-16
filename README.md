@@ -32,17 +32,13 @@ The goal is to maximize long-term revenue without degrading user experience. We 
 
 ---
 
-## Best For
-
 Monetix is ideal for:
-- freemium apps,
-- utility apps,
-- content apps,
-- apps with subscriptions + ads,
-- apps needing dynamic monetization policies.
+- Freemium & utility apps.
+- Apps with both subscriptions and ads.
+- Teams needing to control monetization remotely.
 
-Not ideal for:
-- extremely simple apps needing only one banner ad.
+### 🛑 When NOT to use Monetix
+Monetix may be excessive if your app only needs a single static banner ad and has no premium/subscription logic. If you don't need ad suppression or fallback logic, the raw `google_mobile_ads` package is simpler.
 
 ---
 
@@ -64,6 +60,20 @@ Orchestration systems become easier to understand through workflows. Here is a t
 | Playground Home | Rewarded Break | Debug Control Center |
 | :---: | :---: | :---: |
 | ![Home](media/monetix_home.png) | ![Rewarded](media/monetix_rewarded.png) | ![Debug](media/monetix_debug.png) |
+
+---
+
+## Flexibility & Control
+
+Monetix is designed to be configurable. Every major orchestration feature can be toggled or customized to fit your specific app strategy.
+
+| Feature | Configurable |
+| :--- | :---: |
+| Banner ads | ✅ |
+| Native ads | ✅ |
+| Rewarded ad breaks | ✅ |
+| Fallback ads | ✅ |
+| Orchestration | ✅ |
 
 ---
 
@@ -90,11 +100,19 @@ graph TD
     Fallback --> Others[Future Provider Support]
 ```
 
+### 🏗️ The Three Layers of Monetix
+
+Monetix is built as a modular system, allowing you to use as much or as little as you need.
+
+*   **Core Layer**: The "brains" of the system. Handles ad suppression policies, fallback logic, rate limits, and provider interfaces.
+*   **UI Layer**: Premium, drop-in widgets like `MonetizedNativeAd` and `MonetizedBannerAd` that are policy-aware and react to state changes instantly.
+*   **Developer Tools Layer**: Pre-built admin panels (`MonetixDebugPanel`) and safety gates (`MonetixAdminGate`) to control your monetization strategy live in production.
+
 ---
 
 ## The "Ad-Free Break" Flow
 
-Our signature feature: Let users "buy" time with a single rewarded ad, reducing fatigue and increasing engagement.
+Our signature feature: Let users "buy" time with a single standard rewarded ad, reducing fatigue and increasing engagement. (Note: This uses the standard `RewardedAd` format, not `RewardedInterstitialAd`).
 
 ```mermaid
 sequenceDiagram
@@ -123,15 +141,15 @@ sequenceDiagram
 
 Most ad packages are just widget wrappers. Monetix is a **strategy engine** that lets you define *how* and *when* ads appear based on real-time app state.
 
-### Why not just use Google Mobile Ads directly?
+### ⚡ Quick Comparison
 
-| Problem | Raw AdMob | Monetix |
-| --- | --- | --- |
-| **Premium suppression** | Manual | Built-in |
-| **Rewarded cooldowns** | Manual | Built-in |
-| **Ad-free breaks** | Manual | Built-in |
-| **Centralized policies** | ❌ | ✅ |
-| **Runtime monetization config** | Limited | ✅ |
+| Feature | Typical Ad Wrapper | Monetix |
+| --- | :---: | :---: |
+| **Reactive premium suppression** | Manual | ✅ Built-in |
+| **Rewarded ad-free breaks** | Manual | ✅ Built-in |
+| **Fallback orchestration** | Rare | ✅ Built-in |
+| **Debug/admin tooling** | Absent | ✅ Built-in |
+| **Remote-config ready** | Manual | ✅ Built-in |
 
 ### Problems Monetix Solves
 - 🍝 **Scattered Logic**: No more ad checks and premium suppression scattered across your UI.
@@ -164,11 +182,44 @@ void main() async {
   await Monetix.initialize(
     bannerId: 'ca-app-pub-...',
     nativeId: 'ca-app-pub-...',
+    rewardedId: 'ca-app-pub-...',      // Standard Rewarded Ad (not Rewarded Interstitial)
+    interstitialId: 'ca-app-pub-...',
+    enableRewardedBreak: true, // Optional: defaults to true
   );
 
   runApp(const MyApp());
 }
 ```
+
+### 🛠️ Developer Tools & Admin Panels
+
+Monetix includes pre-built widgets to help you test your monetization strategy live. These are designed to be tucked away in your admin settings or behind a secret gesture.
+
+#### MonetixDebugPanel
+A comprehensive control center to toggle premium status, enable/disable ads, and simulate ad failures.
+
+```dart
+// Open it from any button
+onTap: () => Navigator.push(
+  context, 
+  MaterialPageRoute(builder: (_) => const MonetixDebugPanel()),
+)
+```
+
+#### MonetixAdminGate
+A simple helper to safely hide debug tools in production.
+
+```dart
+MonetixAdminGate(
+  showIf: currentUser.isAdmin, // Or kDebugMode
+  child: const MonetixDebugButton(),
+)
+```
+
+#### Disabling Rewarded Breaks
+If you don't want to offer users the "Ad-Free Break" feature (the "Pause Ads" button), simply set `enableRewardedBreak: false` during initialization. This will hide the opt-out buttons from all `MonetizedNativeAd` and `MonetizedBannerAd` widgets.
+
+---
 
 #### 3. Add Widgets
 
@@ -178,114 +229,12 @@ MonetizedBannerAd(screen: 'home', placement: 'footer')
 
 ---
 
-### Path 2: Production Setup
-Ideal for apps with RevenueCat, Firebase Remote Config, analytics, and complex orchestration.
+---
 
-#### 1. Install
+### Path 2: Production Setup (Advanced)
+Ideal for apps with **RevenueCat**, **Firebase Remote Config**, and custom analytics. This path requires implementing the core interfaces to link Monetix to your existing infrastructure.
 
-```yaml
-dependencies:
-  monetix_flutter: ^0.1.2
-```
-
-### 2. Implement the Interfaces
-
-Create a class that implements `IAdStatusProvider` (e.g., wrapping RevenueCat) and `IAdConfigProvider` (e.g., wrapping Firebase Remote Config).
-
-Both interfaces extend `Listenable`, so your implementation **must** also extend `ChangeNotifier` (or another `Listenable`) to enable reactive UI updates.
-
-```dart
-class MyPremiumStatus extends ChangeNotifier implements IAdStatusProvider {
-  bool _isPremium = false;
-  final _controller = StreamController<bool>.broadcast();
-
-  @override bool get isPremium => _isPremium;
-  @override Stream<bool> get premiumStatusStream => _controller.stream;
-
-  void onSubscriptionChanged(bool isPremium) {
-    _isPremium = isPremium;
-    _controller.add(isPremium);
-    notifyListeners(); // Triggers UI rebuild
-  }
-
-  // ... implement remaining label/string getters
-}
-```
-
-### 3. Wire Up the Provider Tree
-
-Use `ListenableProxyProvider` to expose your implementations as the Monetix interfaces. This is what enables **reactive premium suppression** — ads disappear the instant `notifyListeners()` is called.
-
-```dart
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  Provider.debugCheckInvalidValueType = null; // Required for interface injection
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        // 1. Your status provider (e.g. RevenueCat)
-        ChangeNotifierProvider<MyPremiumStatus>(
-          create: (_) => MyPremiumStatus(),
-        ),
-        // Expose as interface — use ListenableProxyProvider for reactivity
-        ListenableProxyProvider<MyPremiumStatus, IAdStatusProvider>(
-          update: (_, status, __) => status,
-        ),
-
-        // 2. Your config provider (e.g. Firebase Remote Config)
-        ChangeNotifierProvider<MyAdConfig>(
-          create: (_) => MyAdConfig(),
-        ),
-        ListenableProxyProvider<MyAdConfig, IAdConfigProvider>(
-          update: (_, config, __) => config,
-        ),
-
-        // 3. Analytics (optional)
-        Provider<IAdAnalytics>(create: (_) => ConsoleAdAnalytics()),
-
-        // 4. Rewarded Ad Service
-        ChangeNotifierProxyProvider2<MyAdConfig, IAdAnalytics, RewardedMonetizationService>(
-          create: (ctx) => RewardedMonetizationService(
-            ctx.read<MyAdConfig>(),
-            analyticsService: ctx.read<IAdAnalytics>(),
-          ),
-          update: (_, __, ___, prev) => prev!,
-        ),
-
-        // 5. Main Orchestrator
-        Provider<MonetizationService>(
-          create: (ctx) {
-            final svc = MonetizationService(
-              ctx.read<MyAdConfig>(),
-              statusProvider: ctx.read<MyPremiumStatus>(),
-              analyticsService: ctx.read<IAdAnalytics>(),
-              rewardedAdService: ctx.read<RewardedMonetizationService>(),
-            );
-            svc.init();
-            return svc;
-          },
-        ),
-      ],
-      child: MaterialApp(home: MyHomePage()),
-    );
-  }
-}
-```
-
-### 4. Add Widgets
-
-```dart
-// Automatically hides when user is premium or in an ad-free break
-MonetizedNativeAd(screen: 'home', placement: 'main_feed')
-
-// Standalone banner (falls back gracefully if native fails)
-MonetizedBannerAd(screen: 'home', placement: 'footer')
-```
+👉 **[View the Production Setup Guide](doc/production_setup.md)**
 
 ---
 
@@ -299,6 +248,8 @@ For production apps. Implement the core interfaces to link your own services:
 - **Remote Config**: Manage IDs and frequencies remotely.
 - **Analytics**: Connect Firebase, Mixpanel, or Amplitude.
 - **RevenueCat**: React to subscription states instantly.
+
+👉 **[Deep Dive: Architecture & Logic](doc/architecture.md)**
 
 ---
 

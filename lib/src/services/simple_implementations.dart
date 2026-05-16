@@ -10,27 +10,56 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
   @override final String? interstitialAdUnitId;
   @override final String? rewardedAdUnitId;
   @override final String? nativeAdUnitId;
-  @override final bool adsEnabled;
+  bool _adsEnabled;
+  @override bool get adsEnabled => _adsEnabled;
+  set adsEnabled(bool value) {
+    _adsEnabled = value;
+    notifyListeners();
+  }
+  
   @override final List<String> testDeviceIds;
-  @override final Duration rewardAdFreeDuration;
+  
+  Duration _rewardAdFreeDuration;
+  @override Duration get rewardAdFreeDuration => _rewardAdFreeDuration;
+  set rewardAdFreeDuration(Duration value) {
+    _rewardAdFreeDuration = value;
+    notifyListeners();
+  }
+
+  bool _enableRewardedBreak;
+  @override bool get enableRewardedBreak => _enableRewardedBreak;
+  set enableRewardedBreak(bool value) {
+    _enableRewardedBreak = value;
+    notifyListeners();
+  }
+
   @override final int maxAdsPerRateLimitWindow;
   @override final Duration rateLimitWindowDuration;
   @override final Duration cooldownBetweenAdsDuration;
-  @override final bool simulateNativeFailure;
-
+  
+  bool _simulateNativeFailure;
+  @override bool get simulateNativeFailure => _simulateNativeFailure;
+  set simulateNativeFailure(bool value) {
+    _simulateNativeFailure = value;
+    notifyListeners();
+  }
   SimpleAdConfig({
     this.bannerAdUnitId,
     this.interstitialAdUnitId,
     this.rewardedAdUnitId,
     this.nativeAdUnitId,
-    this.adsEnabled = true,
+    bool adsEnabled = true,
     this.testDeviceIds = const [],
-    this.rewardAdFreeDuration = const Duration(minutes: 15),
+    Duration rewardAdFreeDuration = const Duration(minutes: 15),
+    bool enableRewardedBreak = true,
     this.maxAdsPerRateLimitWindow = 2,
     this.rateLimitWindowDuration = const Duration(hours: 1),
     this.cooldownBetweenAdsDuration = const Duration(seconds: 35),
-    this.simulateNativeFailure = false,
-  });
+    bool simulateNativeFailure = false,
+  }) : _adsEnabled = adsEnabled,
+       _rewardAdFreeDuration = rewardAdFreeDuration,
+       _enableRewardedBreak = enableRewardedBreak,
+       _simulateNativeFailure = simulateNativeFailure;
 }
 
 /// An analytics provider that prints events to the console.

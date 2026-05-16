@@ -25,6 +25,10 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+      floatingActionButton: const MonetixAdminGate(
+        showIf: true, // Always show in playground
+        child: MonetixDebugButton(),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [

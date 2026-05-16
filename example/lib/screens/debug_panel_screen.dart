@@ -39,6 +39,12 @@ class DebugPanelScreen extends StatelessWidget {
             value: config.simulateNativeFailure,
             onChanged: (val) => config.setSimulateNativeFailure(val),
           ),
+          SwitchListTile(
+            title: const Text('Enable Rewarded Break'),
+            subtitle: const Text('Show/Hide the "Pause Ads" button'),
+            value: config.enableRewardedBreak,
+            onChanged: (val) => config.setEnableRewardedBreak(val),
+          ),
           
           const Divider(),
           const Padding(

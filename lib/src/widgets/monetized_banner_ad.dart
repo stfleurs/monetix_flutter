@@ -156,14 +156,17 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   Widget build(BuildContext context) {
     if (_adLoaded && _bannerAd != null) {
       final statusProvider = Provider.of<IAdStatusProvider>(context);
+      final configProvider = Provider.of<IAdConfigProvider>(context);
+      final showOptOut = configProvider.enableRewardedBreak;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 1, right: 4),
-            child: GestureDetector(
+          if (showOptOut)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 1, right: 4),
+              child: GestureDetector(
               onTap: () => showRewardStatusSheet(context),
               child: Container(
                 padding:
