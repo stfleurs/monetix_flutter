@@ -7,6 +7,7 @@ import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'monetization_service.dart';
+import 'monetization_gate.dart';
 
 enum RewardBlockReason {
   alreadyShowing,
@@ -28,6 +29,7 @@ class RewardedMonetizationService extends ChangeNotifier {
   final MonetizationService? _monetizationService;
   final IAdAnalytics? _analyticsService;
   final IAdStatusProvider? _statusProvider;
+  MonetizationGate? gate;
   
   RewardedAd? _rewardedAd;
   bool _isLoading = false;
@@ -57,6 +59,26 @@ class RewardedMonetizationService extends ChangeNotifier {
         _autoLoad = autoLoad,
         _nowProvider = nowProvider ?? (() => DateTime.now()) {
     _init();
+    _configProvider.addListener(_onConfigChanged);
+  }
+
+  void _onConfigChanged() {
+    final allowed = gate != null
+        ? gate!.evaluateRewarded().allowed
+        : (_configProvider.adsEnabled && _configProvider.enableRewardedBreak && _statusProvider?.isPremium != true);
+
+    if (!allowed) {
+      if (_rewardedAd != null) {
+        _rewardedAd!.dispose();
+        _rewardedAd = null;
+      }
+      _isLoading = false;
+      notifyListeners();
+    } else {
+      if (_autoLoad && _rewardedAd == null) {
+        loadRewardedAd();
+      }
+    }
   }
 
   void _scheduleExpiryNotify() {
@@ -92,6 +114,12 @@ class RewardedMonetizationService extends ChangeNotifier {
   }
 
   bool get canWatchAd {
+    final allowed = gate != null
+        ? gate!.evaluateRewarded().allowed
+        : (_configProvider.adsEnabled && _configProvider.enableRewardedBreak && _statusProvider?.isPremium != true);
+
+    if (!allowed) return false;
+
     if (_isShowing) return false;
     final now = _safeNowMs();
     final cutoff = now - _rateLimitWindow.inMilliseconds;
@@ -148,8 +176,18 @@ class RewardedMonetizationService extends ChangeNotifier {
   }
 
   Future<void> loadRewardedAd({bool isManual = false}) async {
-    // Never load ads for premium users.
-    if (_statusProvider?.isPremium == true) return;
+    final allowed = gate != null
+        ? gate!.evaluateRewarded().allowed
+        : (_configProvider.adsEnabled && _configProvider.enableRewardedBreak && _statusProvider?.isPremium != true);
+
+    if (!allowed) {
+      if (_rewardedAd != null) {
+        _rewardedAd!.dispose();
+        _rewardedAd = null;
+      }
+      return;
+    }
+
     if (_isLoading || _rewardedAd != null) return;
     
     if (isManual) {
@@ -210,6 +248,15 @@ class RewardedMonetizationService extends ChangeNotifier {
     required VoidCallback onRewarded,
     VoidCallback? onFailed,
   }) async {
+    final allowed = gate != null
+        ? gate!.evaluateRewarded().allowed
+        : (_configProvider.adsEnabled && _configProvider.enableRewardedBreak && _statusProvider?.isPremium != true);
+
+    if (!allowed) {
+      onFailed?.call();
+      return;
+    }
+
     if (!canWatchAd) {
       onFailed?.call();
       return;
@@ -341,6 +388,7 @@ class RewardedMonetizationService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _configProvider.removeListener(_onConfigChanged);
     _expiryTimer?.cancel();
     _rewardedAd?.dispose();
     super.dispose();

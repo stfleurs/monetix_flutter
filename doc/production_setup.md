@@ -48,6 +48,9 @@ class MyAdConfig extends ChangeNotifier implements IAdConfigProvider {
 
 Monetix uses `Provider` for dependency injection. We recommend using `ListenableProxyProvider` to ensure the UI reacts instantly to state changes.
 
+> [!TIP]
+> **Optional Provider Injection**: The `MultiProvider` wiring shown below is recommended for large, custom production environments (e.g. if you integrate custom state management like BLoC or Riverpod). However, if you are doing a simple setup, you can completely skip wrapping the widget tree in `Provider`s! Package widgets utilize a **hybrid resolution model** that automatically falls back to the global singletons initialized via `Monetix.initialize(...)`.
+
 ```dart
 MultiProvider(
   providers: [

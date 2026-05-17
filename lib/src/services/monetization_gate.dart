@@ -43,6 +43,10 @@ class MonetizationGate extends ChangeNotifier {
   final IAdStatusProvider _statusProvider;
   final RewardedMonetizationService _rewardedService;
 
+  IAdConfigProvider get configProvider => _configProvider;
+  IAdStatusProvider get statusProvider => _statusProvider;
+  RewardedMonetizationService get rewardedService => _rewardedService;
+
   MonetizationGate({
     required IAdConfigProvider configProvider,
     required IAdStatusProvider statusProvider,
@@ -81,6 +85,17 @@ class MonetizationGate extends ChangeNotifier {
   /// Evaluates interstitial ad visibility.
   AdDecision evaluateInterstitial() {
     return evaluateBanner();
+  }
+
+  /// Evaluates rewarded ad visibility/loading policy.
+  AdDecision evaluateRewarded() {
+    if (!_configProvider.adsEnabled || !_configProvider.enableRewardedBreak) {
+      return const AdDecision(allowed: false, reason: AdVisibilityReason.remoteDisabled);
+    }
+    if (_statusProvider.isPremium) {
+      return const AdDecision(allowed: false, reason: AdVisibilityReason.premium);
+    }
+    return const AdDecision(allowed: true, reason: AdVisibilityReason.allowed);
   }
 
   /// Returns true if all criteria for showing ads are met.

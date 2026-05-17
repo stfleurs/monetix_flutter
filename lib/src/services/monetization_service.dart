@@ -6,12 +6,14 @@ import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'rewarded_monetization_service.dart';
+import 'monetization_gate.dart';
 
 class MonetizationService {
   final IAdConfigProvider _configProvider;
   final IAdStatusProvider? _statusProvider;
   final IAdAnalytics? _analyticsService;
   RewardedMonetizationService? rewardedAdService;
+  MonetizationGate? gate;
   
   InterstitialAd? _interstitialAd;
   bool isInitialized = false;
@@ -37,10 +39,34 @@ class MonetizationService {
     IAdAnalytics? analyticsService,
     this.rewardedAdService,
   })  : _statusProvider = statusProvider,
-        _analyticsService = analyticsService;
+        _analyticsService = analyticsService {
+    _configProvider.addListener(_onConfigChanged);
+  }
 
   bool get isAdFree => _isPremium || (rewardedAdService?.isAdFree ?? false);
-  bool shouldShowInterstitial() => !isAdFree;
+  bool shouldShowInterstitial() {
+    return gate != null 
+        ? gate!.evaluateInterstitial().allowed 
+        : (_configProvider.adsEnabled && !isAdFree);
+  }
+
+  void _onConfigChanged() {
+    final allowed = gate != null 
+        ? gate!.evaluateInterstitial().allowed 
+        : (_configProvider.adsEnabled && !isAdFree);
+
+    if (!allowed) {
+      if (_interstitialAd != null) {
+        _interstitialAd!.dispose();
+        _interstitialAd = null;
+      }
+      _isLoading = false;
+    } else {
+      if (isInitialized && _interstitialAd == null) {
+        loadInterstitialAd();
+      }
+    }
+  }
 
   Future<void>? _initFuture;
 
@@ -150,7 +176,19 @@ class MonetizationService {
   }
 
   Future<void> loadInterstitialAd() async {
-    if (!isInitialized || isAdFree || _isLoading) return;
+    if (!isInitialized || _isLoading) return;
+
+    final allowed = gate != null 
+        ? gate!.evaluateInterstitial().allowed 
+        : (_configProvider.adsEnabled && !isAdFree);
+
+    if (!allowed) {
+      if (_interstitialAd != null) {
+        _interstitialAd!.dispose();
+        _interstitialAd = null;
+      }
+      return;
+    }
 
     final adUnitId = interstitialAdUnitId ?? _testInterstitialId;
     _isLoading = true;
@@ -250,7 +288,11 @@ class MonetizationService {
   }
 
   Future<void> showInterstitialAd({String? screen, String? placement}) async {
-    if (isAdFree) {
+    final allowed = gate != null 
+        ? gate!.evaluateInterstitial().allowed 
+        : (_configProvider.adsEnabled && !isAdFree);
+
+    if (!allowed) {
       if (_interstitialAd != null) {
         _interstitialAd!.dispose();
         _interstitialAd = null;
@@ -324,6 +366,7 @@ class MonetizationService {
   }
 
   void dispose() {
+    _configProvider.removeListener(_onConfigChanged);
     _interstitialAd?.dispose();
     _premiumSubscription?.cancel();
     _connectivitySubscription?.cancel();

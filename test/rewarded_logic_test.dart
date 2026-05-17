@@ -9,11 +9,25 @@ class MockConfig extends ChangeNotifier implements IAdConfigProvider {
   @override String? get interstitialAdUnitId => null;
   @override String? get rewardedAdUnitId => null;
   @override String? get nativeAdUnitId => null;
-  @override bool get adsEnabled => true;
+  
+  bool _adsEnabled = true;
+  @override bool get adsEnabled => _adsEnabled;
+  set adsEnabled(bool val) {
+    _adsEnabled = val;
+    notifyListeners();
+  }
+
   @override List<String> get testDeviceIds => [];
   
   @override Duration get rewardAdFreeDuration => const Duration(minutes: 15);
-  @override bool get enableRewardedBreak => true;
+  
+  bool _enableRewardedBreak = true;
+  @override bool get enableRewardedBreak => _enableRewardedBreak;
+  set enableRewardedBreak(bool val) {
+    _enableRewardedBreak = val;
+    notifyListeners();
+  }
+
   @override int get maxAdsPerRateLimitWindow => 2;
   @override Duration get rateLimitWindowDuration => const Duration(hours: 1);
   @override Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);
@@ -119,6 +133,36 @@ void main() {
       // Advance time past cooldown (35s)
       mockTime = mockTime.add(const Duration(seconds: 30)); 
       expect(service.canWatchAd, true); // (10s + 30s = 40s > 35s)
+    });
+
+    test('Dynamic remote-config toggle blocks loading', () async {
+      service = RewardedMonetizationService(
+        config, 
+        autoLoad: false, 
+        nowProvider: () => mockTime,
+      );
+      await service.initialized;
+      
+      expect(service.canWatchAd, true);
+      
+      // Toggle ads globally disabled
+      config.adsEnabled = false;
+      
+      expect(service.canWatchAd, false);
+    });
+
+    test('MonetizationGate Centralized Policy check', () async {
+      final gate = MonetizationGate(
+        configProvider: config,
+        statusProvider: BasicAdStatus(),
+        rewardedService: RewardedMonetizationService(config, autoLoad: false),
+      );
+      
+      expect(gate.evaluateRewarded().allowed, true);
+      
+      config.adsEnabled = false;
+      expect(gate.evaluateRewarded().allowed, false);
+      expect(gate.evaluateRewarded().reason, AdVisibilityReason.remoteDisabled);
     });
   });
 }

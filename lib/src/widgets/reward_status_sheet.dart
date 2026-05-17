@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import '../services/rewarded_monetization_service.dart';
+
+import '../services/monetix_facade.dart';
 
 /// Shows a bottom sheet that lets the user watch a rewarded ad to get a
 /// temporary ad-free break.
@@ -14,14 +15,57 @@ void showRewardStatusSheet(BuildContext context) {
   );
 }
 
-class RewardStatusSheet extends StatelessWidget {
+class RewardStatusSheet extends StatefulWidget {
   const RewardStatusSheet({super.key});
 
   @override
+  State<RewardStatusSheet> createState() => _RewardStatusSheetState();
+}
+
+class _RewardStatusSheetState extends State<RewardStatusSheet> {
+  RewardedMonetizationService? _currentRewarded;
+  IAdStatusProvider? _currentStatus;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final rewarded = Monetix.getRewarded(context);
+    if (_currentRewarded != rewarded) {
+      _currentRewarded?.removeListener(_onStateChanged);
+      _currentRewarded = rewarded;
+      _currentRewarded?.addListener(_onStateChanged);
+    }
+
+    final status = Monetix.getStatus(context);
+    if (_currentStatus != status) {
+      _currentStatus?.removeListener(_onStateChanged);
+      _currentStatus = status;
+      _currentStatus?.addListener(_onStateChanged);
+    }
+  }
+
+  void _onStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _currentRewarded?.removeListener(_onStateChanged);
+    _currentStatus?.removeListener(_onStateChanged);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_currentRewarded == null || _currentStatus == null) {
+      return const SizedBox.shrink();
+    }
     final theme = Theme.of(context);
-    final rewardedAd = context.watch<RewardedMonetizationService>();
-    final statusProvider = context.watch<IAdStatusProvider>();
+    final rewardedAd = _currentRewarded!;
+    final statusProvider = _currentStatus!;
     
     final canWatch = rewardedAd.canWatchAd;
     final blockReason = rewardedAd.blockReason;

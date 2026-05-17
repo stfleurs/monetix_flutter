@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:provider/provider.dart';
-import '../interfaces/i_ad_analytics.dart';
-import '../interfaces/i_ad_config_provider.dart';
-import '../interfaces/i_ad_status_provider.dart';
 import '../services/monetization_gate.dart';
+import '../services/monetix_facade.dart';
 import 'monetized_native_ad.dart'; // For SafeState mixin
 import 'reward_status_sheet.dart';
 
@@ -27,17 +24,19 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
     with SafeState<MonetizedBannerAd> {
   BannerAd? _bannerAd;
   bool _adLoaded = false;
+  bool _isLoading = false;
   bool _hasLoggedImpression = false;
   DateTime? _loadStartTime;
   int? _loadDurationMs;
   StreamSubscription<bool>? _premiumSubscription;
+  MonetizationGate? _currentGate;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final statusProvider = Provider.of<IAdStatusProvider>(context, listen: false);
+      final statusProvider = Monetix.getStatus(context);
       _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
         if (mounted) setState(() {});
       });
@@ -48,14 +47,33 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final adGate = Provider.of<MonetizationGate>(context);
-    final decision = adGate.evaluateBanner();
+    final adGate = Monetix.getGate(context);
+    if (_currentGate != adGate) {
+      _currentGate?.removeListener(_onGateChanged);
+      _currentGate = adGate;
+      _currentGate?.addListener(_onGateChanged);
+    }
+
+    _evaluateAdDecision();
+  }
+
+  void _onGateChanged() {
+    if (mounted) {
+      setState(() {
+        _evaluateAdDecision();
+      });
+    }
+  }
+
+  void _evaluateAdDecision() {
+    if (_currentGate == null) return;
+    final decision = _currentGate!.evaluateBanner();
 
     if (!decision.allowed) {
       debugPrint('🛡️ [Monetix] Banner ad hidden on screen "${widget.screen}" (placement: "${widget.placement}") due to reason: ${decision.reason}');
     }
 
-    if (decision.allowed && !_adLoaded) {
+    if (decision.allowed && !_adLoaded && !_isLoading) {
       _loadBannerAd();
     } else if (!decision.allowed && _adLoaded) {
       _disposeBanner();
@@ -69,16 +87,21 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   }
 
   Future<void> _loadBannerAd() async {
-    final configProvider =
-        Provider.of<IAdConfigProvider>(context, listen: false);
-    final analyticsService = Provider.of<IAdAnalytics>(context, listen: false);
+    if (_isLoading) return;
+
+    final configProvider = Monetix.getConfig(context);
+    final analyticsService = Monetix.getAnalytics(context);
     final adUnitId = configProvider.bannerAdUnitId ??
         'ca-app-pub-3940256099942544/6300978111'; // Test ID
 
-    final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
         MediaQuery.of(context).size.width.truncate());
 
     if (!isSafe || size == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
 
     _loadStartTime = DateTime.now();
     analyticsService.logAdRequest(
@@ -101,6 +124,7 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
             }
             setState(() {
               _adLoaded = true;
+              _isLoading = false;
             });
           },
           onAdImpression: (ad) {
@@ -125,6 +149,9 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
               screen: widget.screen,
               placement: widget.placement,
             );
+            setState(() {
+              _isLoading = false;
+            });
           },
           onPaidEvent: (ad, valueMicros, precision, currencyCode) {
             analyticsService.logAdRevenue(
@@ -147,6 +174,7 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   @override
   void dispose() {
     _premiumSubscription?.cancel();
+    _currentGate?.removeListener(_onGateChanged);
     _bannerAd?.dispose();
     super.dispose();
   }
@@ -154,8 +182,8 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   @override
   Widget build(BuildContext context) {
     if (_adLoaded && _bannerAd != null) {
-      final statusProvider = Provider.of<IAdStatusProvider>(context);
-      final configProvider = Provider.of<IAdConfigProvider>(context);
+      final statusProvider = Monetix.getStatus(context);
+      final configProvider = Monetix.getConfig(context);
       final showOptOut = configProvider.enableRewardedBreak;
 
       return Column(

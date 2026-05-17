@@ -15,10 +15,19 @@ Monetix is not just an ad SDK wrapper — it's a policy-driven orchestration lay
 
 ---
 
-## ⏱️ 30-Second Integration
+Monetix works out of the box with zero provider setup required in your widget tree! Our widgets utilize a **hybrid resolution model**—they first try to look up your dependencies via standard `Provider` injection, and if not present, gracefully fall back to the global singleton instances initialized by `Monetix.initialize(...)`.
 
-Monetix works out of the box, but becomes exponentially more powerful when connected to your premium state and remote config systems. To start simple:
+To start simple:
 
+1. Initialize in `main()`:
+```dart
+await Monetix.initialize(
+  bannerId: 'ca-app-pub-...',
+  nativeId: 'ca-app-pub-...',
+);
+```
+
+2. Drop a widget anywhere in your app:
 ```dart
 MonetizedBannerAd(
   screen: 'home',
@@ -156,8 +165,11 @@ Most ad packages are just widget wrappers. Monetix is a **strategy engine** that
 | **Remote-config ready** | Manual | ✅ Built-in |
 
 ### Problems Monetix Solves
-- 🍝 **Scattered Logic**: No more ad checks and premium suppression scattered across your UI.
+- 🍝 **Scattered Logic**: No more ad checks and premium suppression scattered across your UI. Centralized policy evaluation under `MonetizationGate` ensures ads always respect dynamic configurations.
+- 🛑 **Background Leakage**: Ad services reactively listen to remote config changes—if ads are globally disabled or if a premium status change occurs, background preloads are aborted and cleaned up instantly.
 - 📉 **Revenue Leakage**: `MonetizedNativeAd` automatically falls back to Banners if high-value Native ads fail.
+- 📶 **Bandwidth Friendly**: Fallback banners are loaded **lazily** only if the native ad request fails or exceeds the configurable 5-second timeout, preserving user bandwidth.
+- 🔒 **Load Safety**: `MonetizedBannerAd` handles dynamic rebuilds safely with native `_isLoading` guards, preventing duplicate concurrent ad requests.
 - 😫 **User Frustration**: Handles the complex logic of rewarded breaks, rate limits, and cooldowns out of the box.
 - 🔓 **Provider Lock-in**: Interface-driven design lets you swap or mock providers (AdMob, RevenueCat, Custom) easily.
 
@@ -172,8 +184,11 @@ Ideal for basic apps with minimal config.
 
 ```yaml
 dependencies:
-  monetix_flutter: ^0.1.2
+  monetix_flutter: ^0.1.5
 ```
+
+> [!NOTE]
+> Since version `0.1.5`, **no Provider tree wrapping is required** for the simple setup path. The widgets will automatically locate the global singletons set up by `Monetix.initialize(...)`.
 
 #### 2. Initialize
 

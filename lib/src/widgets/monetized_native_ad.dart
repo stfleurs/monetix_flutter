@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:provider/provider.dart';
-import '../interfaces/i_ad_analytics.dart';
-import '../interfaces/i_ad_config_provider.dart';
-import '../interfaces/i_ad_status_provider.dart';
 import '../services/monetization_gate.dart';
-import '../services/monetization_service.dart';
+import '../services/monetix_facade.dart';
 import 'reward_status_sheet.dart';
 
 mixin SafeState<T extends StatefulWidget> on State<T> {
@@ -48,9 +44,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   bool _hasLoggedImpression = false;
   bool _hasLoggedBannerImpression = false;
 
-  int _retryCount = 0;
   int _bannerRetryCount = 0;
-  static const int _maxRetries = 3;
   static const int _maxBannerRetries = 3;
 
   bool _nativeFailed = false;
@@ -63,6 +57,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
 
   Brightness? _currentBrightness;
   StreamSubscription<bool>? _premiumSubscription;
+  MonetizationGate? _currentGate;
+  
+  static const Duration _nativeFallbackTimeout = Duration(seconds: 5);
 
   bool _canRetry() {
     if (_lastFailureTime == null) return true;
@@ -73,12 +70,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   @override
   void initState() {
     super.initState();
-    // Subscribe directly to the premium stream so ads react regardless of
-    // how the host app has set up its Provider tree.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final statusProvider =
-          Provider.of<IAdStatusProvider>(context, listen: false);
+      final statusProvider = Monetix.getStatus(context);
       _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
         if (mounted) setState(() {});
       });
@@ -89,11 +83,29 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final adGate = Provider.of<MonetizationGate>(context);
-    final configProvider = Provider.of<IAdConfigProvider>(context);
+    final adGate = Monetix.getGate(context);
+    if (_currentGate != adGate) {
+      _currentGate?.removeListener(_onGateChanged);
+      _currentGate = adGate;
+      _currentGate?.addListener(_onGateChanged);
+    }
 
+    _evaluateAdDecision();
+  }
+
+  void _onGateChanged() {
+    if (mounted) {
+      setState(() {
+        _evaluateAdDecision();
+      });
+    }
+  }
+
+  void _evaluateAdDecision() {
+    if (_currentGate == null) return;
+    final configProvider = Monetix.getConfig(context);
     final currentBrightness = Theme.of(context).brightness;
-    final decision = adGate.evaluateNative();
+    final decision = _currentGate!.evaluateNative();
 
     if (!decision.allowed) {
       debugPrint('🛡️ [Monetix] Native ad hidden on screen "${widget.screen}" (placement: "${widget.placement}") due to reason: ${decision.reason}');
@@ -107,15 +119,15 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     }
 
     if (decision.allowed && configProvider.adsEnabled && _canRetry()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!isSafe) return;
-        if (!_adLoaded && !_isLoading && _nativeAd == null) {
-          _loadNativeAd();
-        }
+      if (configProvider.simulateNativeFailure) {
         if (!_bannerLoaded && !_isBannerLoading && _fallbackBannerAd == null) {
           _loadFallbackBanner();
         }
-      });
+      } else {
+        if (!_adLoaded && !_isLoading && _nativeAd == null) {
+          _loadNativeAd();
+        }
+      }
     } else if (!decision.allowed &&
         (_nativeAd != null || _fallbackBannerAd != null)) {
       _disposeAds();
@@ -139,16 +151,14 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   }
 
   Future<void> _loadNativeAd() async {
-    final configProvider =
-        Provider.of<IAdConfigProvider>(context, listen: false);
+    final configProvider = Monetix.getConfig(context);
     final adUnitId = configProvider.nativeAdUnitId ??
         'ca-app-pub-3940256099942544/2247696110'; // Test ID
 
     if (adUnitId.isEmpty) return;
 
-    final monetizationService =
-        Provider.of<MonetizationService>(context, listen: false);
-    final analyticsService = Provider.of<IAdAnalytics>(context, listen: false);
+    final monetizationService = Monetix.getService(context);
+    final analyticsService = Monetix.getAnalytics(context);
     final theme = Theme.of(context);
 
     if (!isSafe) return;
@@ -187,7 +197,6 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
             setState(() {
               _adLoaded = true;
               _isLoading = false;
-              _retryCount = 0;
             });
           },
           onAdImpression: (ad) {
@@ -212,17 +221,11 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
             );
             ad.dispose();
             if (isSafe) {
-              setState(() => _isLoading = false);
-              if (_retryCount < _maxRetries) {
-                _retryCount++;
-                Future.delayed(Duration(seconds: _retryCount * 5), () {
-                  if (isSafe && !_adLoaded && !_isLoading && !_nativeFailed) {
-                    _loadNativeAd();
-                  }
-                });
-              } else {
-                setState(() => _nativeFailed = true);
-              }
+              setState(() {
+                _isLoading = false;
+                _nativeFailed = true;
+              });
+              _loadFallbackBanner();
             }
           },
           onPaidEvent: (ad, valueMicros, precision, currencyCode) {
@@ -271,9 +274,13 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
       }
     }
 
-    Future.delayed(const Duration(seconds: 5), () {
-      if (isSafe && !_adLoaded && !_nativeFailed && !_isLoading) {
-        setState(() => _nativeFailed = true);
+    Future.delayed(_nativeFallbackTimeout, () {
+      if (isSafe && !_adLoaded && !_nativeFailed && _isLoading) {
+        setState(() {
+          _nativeFailed = true;
+          _isLoading = false;
+        });
+        _loadFallbackBanner();
       }
     });
   }
@@ -281,14 +288,13 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   Future<void> _loadFallbackBanner() async {
     if (_isBannerLoading || _bannerLoaded) return;
 
-    final configProvider =
-        Provider.of<IAdConfigProvider>(context, listen: false);
+    final configProvider = Monetix.getConfig(context);
     final adUnitId = configProvider.bannerAdUnitId ??
         'ca-app-pub-3940256099942544/6300978111';
 
     if (adUnitId.isEmpty) return;
 
-    final analyticsService = Provider.of<IAdAnalytics>(context, listen: false);
+    final analyticsService = Monetix.getAnalytics(context);
     setState(() => _isBannerLoading = true);
 
     final size = widget.templateType == TemplateType.small
@@ -374,6 +380,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   @override
   void dispose() {
     _premiumSubscription?.cancel();
+    _currentGate?.removeListener(_onGateChanged);
     _nativeAd?.dispose();
     _fallbackBannerAd?.dispose();
     super.dispose();
@@ -381,16 +388,16 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
 
   @override
   Widget build(BuildContext context) {
-    final adGate = Provider.of<MonetizationGate>(context);
-    final decision = adGate.evaluateNative();
+    if (_currentGate == null) return const SizedBox.shrink();
+    final decision = _currentGate!.evaluateNative();
 
     if (!decision.allowed) {
       return const SizedBox.shrink();
     }
 
-    final statusProvider = Provider.of<IAdStatusProvider>(context);
+    final statusProvider = Monetix.getStatus(context);
 
-    final configProvider = Provider.of<IAdConfigProvider>(context);
+    final configProvider = Monetix.getConfig(context);
     final simulateFailure = configProvider.simulateNativeFailure;
     final isMedium = widget.templateType == TemplateType.medium;
 
@@ -467,7 +474,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     }
 
     Widget buildAdWrapper(Widget adContent) {
-      final configProvider = Provider.of<IAdConfigProvider>(context);
+      final configProvider = Monetix.getConfig(context);
       final showOptOut = configProvider.enableRewardedBreak;
 
       return Column(

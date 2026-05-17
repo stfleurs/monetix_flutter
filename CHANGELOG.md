@@ -1,3 +1,10 @@
+## 0.1.5
+- **Hybrid Resolution**: Decoupled package widgets from strict Provider injection tree requirements, integrating robust fallback resolution to facade singletons.
+- **Dynamic Background Suppression**: Services dynamically monitor Remote Config / premium updates, immediately cancelling active background loads and disposing of ad cache on disable.
+- **Bandwidth-Friendly Fallbacks**: Migrated Native fallback Banner ad loads to occur lazily upon Native ad failure or timeout (5 seconds).
+- **Safety Guards**: Implemented `_isLoading` guard on Banner ads to prevent duplicate/concurrent request storms under rapid rebuilds.
+- **Improved Portability**: Relaxed package dependency constraint to `google_mobile_ads: ">=7.0.0 <9.0.0"` and migrated anchored adaptive banner sizes to a highly portable API compatible across all versions.
+
 ## 0.1.4
 - **Developer Tools**: Added `MonetixDebugPanel`, `MonetixDebugButton`, and `MonetixAdminGate` for easier production testing.
 - **Flexibility**: Added `enableRewardedBreak` toggle to globally disable the rewarded ad break feature.

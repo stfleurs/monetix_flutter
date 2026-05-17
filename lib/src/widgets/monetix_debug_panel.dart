@@ -1,22 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import '../services/simple_implementations.dart';
+import '../services/monetix_facade.dart';
 
 /// A premium, ready-to-use debug panel for Monetix.
 /// 
 /// This widget provides a comprehensive interface for testing monetization
 /// states live in your app. It works best with [SimpleAdConfig] and [BasicAdStatus],
 /// but can also be used with custom implementations if they provide setters.
-class MonetixDebugPanel extends StatelessWidget {
+class MonetixDebugPanel extends StatefulWidget {
   const MonetixDebugPanel({super.key});
 
   @override
+  State<MonetixDebugPanel> createState() => _MonetixDebugPanelState();
+}
+
+class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
+  IAdConfigProvider? _currentConfig;
+  IAdStatusProvider? _currentStatus;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final config = Monetix.getConfig(context);
+    if (_currentConfig != config) {
+      _currentConfig?.removeListener(_onStateChanged);
+      _currentConfig = config;
+      _currentConfig?.addListener(_onStateChanged);
+    }
+
+    final status = Monetix.getStatus(context);
+    if (_currentStatus != status) {
+      _currentStatus?.removeListener(_onStateChanged);
+      _currentStatus = status;
+      _currentStatus?.addListener(_onStateChanged);
+    }
+  }
+
+  void _onStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _currentConfig?.removeListener(_onStateChanged);
+    _currentStatus?.removeListener(_onStateChanged);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_currentConfig == null || _currentStatus == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     final theme = Theme.of(context);
-    final config = context.watch<IAdConfigProvider>();
-    final status = context.watch<IAdStatusProvider>();
+    final config = _currentConfig!;
+    final status = _currentStatus!;
 
     return Scaffold(
       appBar: AppBar(
