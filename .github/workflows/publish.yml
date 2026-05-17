@@ -23,5 +23,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Analyze package
+        run: flutter analyze
+
+      - name: Run unit tests
+        run: flutter test
+
+      - name: Verify pub.dev publishing constraints
+        run: flutter pub publish --dry-run
+
       - name: Publish package
         run: flutter pub publish --force
