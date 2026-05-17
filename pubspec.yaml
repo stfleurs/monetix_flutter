@@ -1,6 +1,6 @@
 name: monetix_flutter
 description: A production-ready monetization policy layer for Flutter. Manages ads, premium state, consent, and rewarded ad-free breaks.
-version: 0.1.6
+version: 0.1.7
 repository: https://github.com/stfleurs/monetix_flutter
 
 environment:

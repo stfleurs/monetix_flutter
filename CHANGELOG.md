@@ -1,3 +1,6 @@
+## 0.1.7
+- **CI/CD Fix**: Corrected the GitHub Actions glob trigger pattern to `'v*'` so that automated OIDC publishing executes successfully on tag push events.
+
 ## 0.1.6
 - **Automated OIDC Publishing**: Added robust pre-publish validation checks (`flutter analyze`, `flutter test`, and `flutter pub publish --dry-run`) to our OIDC GitHub Actions pipeline.
 - **Release Playbook**: Added a comprehensive `RELEASE_CHECKLIST.md` in the package root to enforce standardized release procedures.
