@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
+import '../services/monetization_gate.dart';
 import '../services/monetization_service.dart';
-import '../services/rewarded_monetization_service.dart';
 import 'reward_status_sheet.dart';
 
 mixin SafeState<T extends StatefulWidget> on State<T> {
@@ -89,13 +89,15 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final statusProvider = Provider.of<IAdStatusProvider>(context);
-    final rewardedAdService = Provider.of<RewardedMonetizationService>(context);
+    final adGate = Provider.of<MonetizationGate>(context);
     final configProvider = Provider.of<IAdConfigProvider>(context);
 
     final currentBrightness = Theme.of(context).brightness;
-    final shouldHideAds =
-        statusProvider.isPremium || rewardedAdService.isAdFree;
+    final decision = adGate.evaluateNative();
+
+    if (!decision.allowed) {
+      debugPrint('🛡️ [Monetix] Native ad hidden on screen "${widget.screen}" (placement: "${widget.placement}") due to reason: ${decision.reason}');
+    }
 
     if ((_adLoaded || _bannerLoaded) &&
         _currentBrightness != currentBrightness) {
@@ -104,7 +106,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
       return;
     }
 
-    if (!shouldHideAds && configProvider.adsEnabled && _canRetry()) {
+    if (decision.allowed && configProvider.adsEnabled && _canRetry()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!isSafe) return;
         if (!_adLoaded && !_isLoading && _nativeAd == null) {
@@ -114,7 +116,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
           _loadFallbackBanner();
         }
       });
-    } else if (shouldHideAds &&
+    } else if (!decision.allowed &&
         (_nativeAd != null || _fallbackBannerAd != null)) {
       _disposeAds();
     }
@@ -379,12 +381,14 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
 
   @override
   Widget build(BuildContext context) {
-    final statusProvider = Provider.of<IAdStatusProvider>(context);
-    final rewardedAdService = Provider.of<RewardedMonetizationService>(context);
+    final adGate = Provider.of<MonetizationGate>(context);
+    final decision = adGate.evaluateNative();
 
-    if (statusProvider.isPremium || rewardedAdService.isAdFree) {
+    if (!decision.allowed) {
       return const SizedBox.shrink();
     }
+
+    final statusProvider = Provider.of<IAdStatusProvider>(context);
 
     final configProvider = Provider.of<IAdConfigProvider>(context);
     final simulateFailure = configProvider.simulateNativeFailure;

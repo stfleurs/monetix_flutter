@@ -9,6 +9,7 @@ export 'src/interfaces/i_ad_config_provider.dart';
 export 'src/services/monetization_service.dart';
 export 'src/services/rewarded_monetization_service.dart';
 export 'src/services/simple_implementations.dart';
+export 'src/services/monetization_gate.dart';
 export 'src/services/monetix_facade.dart';
 
 // Widgets

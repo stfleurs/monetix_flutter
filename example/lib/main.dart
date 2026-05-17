@@ -53,7 +53,7 @@ class MonetixPlaygroundApp extends StatelessWidget {
           update: (_, config, analytics, previous) => previous!,
         ),
         
-        // 5. Main Monetization Orchestrator
+                // 5. Main Monetization Orchestrator
         Provider<MonetizationService>(
           create: (context) {
             final service = MonetizationService(
@@ -65,6 +65,15 @@ class MonetixPlaygroundApp extends StatelessWidget {
             service.init();
             return service;
           },
+        ),
+
+        // 6. Centralized Monetization Gate for UI ad visibility
+        ChangeNotifierProvider<MonetizationGate>(
+          create: (context) => MonetizationGate(
+            configProvider: context.read<IAdConfigProvider>(),
+            statusProvider: context.read<IAdStatusProvider>(),
+            rewardedService: context.read<RewardedMonetizationService>(),
+          ),
         ),
       ],
       child: MaterialApp(

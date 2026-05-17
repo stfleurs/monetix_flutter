@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
-import '../services/rewarded_monetization_service.dart';
+import '../services/monetization_gate.dart';
 import 'monetized_native_ad.dart'; // For SafeState mixin
 import 'reward_status_sheet.dart';
 
@@ -48,17 +48,16 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final configProvider = Provider.of<IAdConfigProvider>(context);
-    final rewardedAdService = Provider.of<RewardedMonetizationService>(context);
-    final statusProvider = Provider.of<IAdStatusProvider>(context);
+    final adGate = Provider.of<MonetizationGate>(context);
+    final decision = adGate.evaluateBanner();
 
-    final shouldShow = configProvider.adsEnabled &&
-        !statusProvider.isPremium &&
-        !rewardedAdService.isAdFree;
+    if (!decision.allowed) {
+      debugPrint('🛡️ [Monetix] Banner ad hidden on screen "${widget.screen}" (placement: "${widget.placement}") due to reason: ${decision.reason}');
+    }
 
-    if (shouldShow && !_adLoaded) {
+    if (decision.allowed && !_adLoaded) {
       _loadBannerAd();
-    } else if (!shouldShow && _adLoaded) {
+    } else if (!decision.allowed && _adLoaded) {
       _disposeBanner();
     }
   }

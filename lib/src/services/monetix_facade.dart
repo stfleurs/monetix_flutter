@@ -1,6 +1,7 @@
 import '../interfaces/i_ad_analytics.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
+import 'monetization_gate.dart';
 import 'monetization_service.dart';
 import 'rewarded_monetization_service.dart';
 import 'simple_implementations.dart';
@@ -9,6 +10,7 @@ import 'simple_implementations.dart';
 class Monetix {
   static MonetizationService? _instance;
   static RewardedMonetizationService? _rewardedInstance;
+  static MonetizationGate? _gateInstance;
 
   /// The global [MonetizationService] instance.
   static MonetizationService get instance {
@@ -24,6 +26,14 @@ class Monetix {
       throw StateError('Monetix not initialized. Call initialize() first.');
     }
     return _rewardedInstance!;
+  }
+
+  /// The global [MonetizationGate] instance.
+  static MonetizationGate get gate {
+    if (_gateInstance == null) {
+      throw StateError('Monetix not initialized. Call initialize() first.');
+    }
+    return _gateInstance!;
   }
 
   /// Initializes the monetization system with either custom providers or simple IDs.
@@ -63,6 +73,12 @@ class Monetix {
       statusProvider: statusProvider,
       analyticsService: analyticsService,
       rewardedAdService: _rewardedInstance,
+    );
+
+    _gateInstance = MonetizationGate(
+      configProvider: configProvider,
+      statusProvider: statusProvider,
+      rewardedService: _rewardedInstance!,
     );
 
     await _instance!.init();
