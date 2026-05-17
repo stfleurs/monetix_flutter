@@ -15,6 +15,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Dart SDK (for OIDC handshake)
+        uses: dart-lang/setup-dart@v1
+
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:

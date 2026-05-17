@@ -1,3 +1,6 @@
+## 0.1.8
+- **CI/CD Fix**: Integrated `dart-lang/setup-dart` into the workflow to securely configure OpenID Connect (OIDC) token handshake variables, resolving hanging authorization requests.
+
 ## 0.1.7
 - **CI/CD Fix**: Corrected the GitHub Actions glob trigger pattern to `'v*'` so that automated OIDC publishing executes successfully on tag push events.
 

@@ -184,11 +184,11 @@ Ideal for basic apps with minimal config.
 
 ```yaml
 dependencies:
-  monetix_flutter: ^0.1.7
+  monetix_flutter: ^0.1.8
 ```
 
 > [!NOTE]
-> Since version `0.1.7`, **no Provider tree wrapping is required** for the simple setup path. The widgets will automatically locate the global singletons set up by `Monetix.initialize(...)`.
+> Since version `0.1.8`, **no Provider tree wrapping is required** for the simple setup path. The widgets will automatically locate the global singletons set up by `Monetix.initialize(...)`.
 
 #### 2. Initialize
 
