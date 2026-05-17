@@ -1,3 +1,7 @@
+## 0.1.6
+- **Automated OIDC Publishing**: Added robust pre-publish validation checks (`flutter analyze`, `flutter test`, and `flutter pub publish --dry-run`) to our OIDC GitHub Actions pipeline.
+- **Release Playbook**: Added a comprehensive `RELEASE_CHECKLIST.md` in the package root to enforce standardized release procedures.
+
 ## 0.1.5
 - **Hybrid Resolution**: Decoupled package widgets from strict Provider injection tree requirements, integrating robust fallback resolution to facade singletons.
 - **Dynamic Background Suppression**: Services dynamically monitor Remote Config / premium updates, immediately cancelling active background loads and disposing of ad cache on disable.
