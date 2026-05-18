@@ -8,6 +8,7 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'monetization_service.dart';
 import 'monetization_gate.dart';
+import 'monetix_facade.dart';
 
 enum RewardBlockReason {
   alreadyShowing,
@@ -60,6 +61,12 @@ class RewardedMonetizationService extends ChangeNotifier {
         _nowProvider = nowProvider ?? (() => DateTime.now()) {
     _init();
     _configProvider.addListener(_onConfigChanged);
+    if (kDebugMode && !Monetix.isInternalConstruction) {
+      debugPrint(
+        '⚠️ Warning: Direct construction of RewardedMonetizationService bypasses the Monetix facade. '
+        'Prefer using Monetix.initialize() or Monetix.bootstrap() to ensure proper lifecycle coordination.'
+      );
+    }
   }
 
   void _onConfigChanged() {

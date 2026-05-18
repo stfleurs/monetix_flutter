@@ -102,3 +102,6 @@ MultiProvider(
 *   **Reactive Ads**: Ads disappear the millisecond a user subscribes.
 *   **Zero Logic in UI**: Your widgets don't need to know about RevenueCat or Remote Config; they just use `MonetizedNativeAd`.
 *   **Testability**: You can swap `MyPremiumStatus` for a mock during integration tests.
+
+> [!NOTE]
+> Direct construction of the monetization services prints a debug console warning to promote facade usage. If you are intentionally using this advanced custom implementation, you can suppress the warning by setting `Monetix.isInternalConstruction = true;` during app startup.

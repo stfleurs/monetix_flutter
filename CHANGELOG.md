@@ -1,3 +1,9 @@
+## 0.1.9
+- **Non-Blocking Initialization**: Restructured setup into synchronous `Monetix.bootstrap(...)` and asynchronous `Monetix.initialize(...)` to resolve heavy startup bottlenecks and Android `DeadObjectException` emulator crashes.
+- **State & Readiness Engine**: Introduced `MonetixState` enum and `state`, `isReady`, and `ready` future properties to natively support offline fallback and graceful degraded ad states.
+- **Developer Safety Guards**: Added debug construction warning messages to notify developers who directly instantiate the underlying services instead of using the facade.
+- **Unit Testing Improvements**: Stabilized unit testing mock channels using custom message codecs to avoid type-cast and `FormatException` errors.
+
 ## 0.1.8
 - **CI/CD Fix**: Integrated `dart-lang/setup-dart` into the workflow to securely configure OpenID Connect (OIDC) token handshake variables, resolving hanging authorization requests.
 

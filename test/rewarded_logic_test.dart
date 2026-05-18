@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetix_flutter/monetix_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_mobile_ads/src/ad_instance_manager.dart';
 
 class MockConfig extends ChangeNotifier implements IAdConfigProvider {
   @override String? get bannerAdUnitId => null;
@@ -45,8 +46,23 @@ void main() {
   });
 
   // Mock Google Mobile Ads
-  const MethodChannel adsChannel = MethodChannel('plugins.flutter.io/google_mobile_ads');
+  final MethodChannel adsChannel = MethodChannel(
+    'plugins.flutter.io/google_mobile_ads',
+    StandardMethodCodec(AdMessageCodec()),
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(adsChannel, (MethodCall methodCall) async {
+    return null;
+  });
+
+  // Mock Google Mobile Ads UMP / Consent
+  final MethodChannel umpChannel = MethodChannel(
+    'plugins.flutter.io/google_mobile_ads/ump',
+    StandardMethodCodec(AdMessageCodec()),
+  );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(umpChannel, (MethodCall methodCall) async {
+    if (methodCall.method == 'ConsentInformation#canRequestAds') {
+      return true;
+    }
     return null;
   });
 
@@ -163,6 +179,48 @@ void main() {
       config.adsEnabled = false;
       expect(gate.evaluateRewarded().allowed, false);
       expect(gate.evaluateRewarded().reason, AdVisibilityReason.remoteDisabled);
+    });
+  });
+
+  group('Monetix Facade Lifecycle & State Transitions', () {
+    late MockConfig config;
+
+    setUp(() {
+      config = MockConfig();
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('bootstrap() registers singletons synchronously and sets state', () {
+      expect(Monetix.state, MonetixState.uninitialized);
+      
+      Monetix.bootstrap(config: config);
+
+      expect(Monetix.state, MonetixState.bootstrapped);
+      expect(Monetix.isReady, false);
+      
+      // Verify singletons are registered instantly and can be queried safely
+      expect(Monetix.instance, isNotNull);
+      expect(Monetix.rewarded, isNotNull);
+      expect(Monetix.gate, isNotNull);
+    });
+
+    test('initialize() transitions to ready when instance is initialized', () async {
+      // Runs on the bootstrapped instance
+      expect(Monetix.state, MonetixState.bootstrapped);
+
+      // Simulate successful initialization of underlying service
+      Monetix.instance.isInitialized = true;
+
+      final initFuture = Monetix.initialize(config: config);
+      expect(Monetix.state, MonetixState.initializing);
+
+      await initFuture;
+      
+      expect(Monetix.state, MonetixState.ready);
+      expect(Monetix.isReady, true);
+      
+      // Verify ready future resolves instantly
+      await expectLater(Monetix.ready, completes);
     });
   });
 }

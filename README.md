@@ -190,23 +190,48 @@ dependencies:
 > [!NOTE]
 > Since version `0.1.8`, **no Provider tree wrapping is required** for the simple setup path. The widgets will automatically locate the global singletons set up by `Monetix.initialize(...)`.
 
-#### 2. Initialize
+#### 2. Initialize (Synchronous & Non-Blocking)
+
+To prevent app startup bottlenecks and thread timeouts (which can occur if critical startup flows are blocked for several seconds), Monetix divides initialization into two fast phases:
+
+1. **Synchronous Bootstrap**: Call `Monetix.bootstrap(...)` instantly in `main()`. This registers the singletons immediately so that all properties (`Monetix.instance`, `Monetix.rewarded`, `Monetix.gate`) are safe to access right away.
+2. **Asynchronous Initialization**: Call `Monetix.initialize(...)` to kick off the UMP consent flow and Mobile Ads SDK in the background without blocking the UI thread.
 
 ```dart
 import 'package:monetix_flutter/monetix_flutter.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await Monetix.initialize(
+  // 1. Instantly register singletons (synchronous, 0ms block)
+  Monetix.bootstrap(
     bannerId: 'ca-app-pub-...',
     nativeId: 'ca-app-pub-...',
     rewardedId: 'ca-app-pub-...',      // Standard Rewarded Ad (not Rewarded Interstitial)
     interstitialId: 'ca-app-pub-...',
-    enableRewardedBreak: true, // Optional: defaults to true
+    enableRewardedBreak: true,         // Optional: defaults to true
   );
 
+  // 2. Start SDK & UMP consent flow in the background (non-blocking)
+  Monetix.initialize();
+
   runApp(const MyApp());
+}
+```
+
+### 🔄 Reacting to Readiness
+If your app needs to check or wait for the exact status of the third-party SDKs:
+*   `Monetix.state`: Returns a `MonetixState` enum (`uninitialized`, `bootstrapped`, `initializing`, `ready`, or `failed`).
+*   `Monetix.isReady`: A boolean helper.
+*   `Monetix.ready`: A resilient future that resolves immediately when initialization completes (either successfully or via timeout/graceful degradation).
+
+```dart
+// Wait for readiness in other parts of your app
+await Monetix.ready;
+if (Monetix.isReady) {
+  // Fully ready!
+} else {
+  // Operating in offline/degraded mode
 }
 ```
 

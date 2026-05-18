@@ -7,6 +7,7 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'rewarded_monetization_service.dart';
 import 'monetization_gate.dart';
+import 'monetix_facade.dart';
 
 class MonetizationService {
   final IAdConfigProvider _configProvider;
@@ -41,6 +42,12 @@ class MonetizationService {
   })  : _statusProvider = statusProvider,
         _analyticsService = analyticsService {
     _configProvider.addListener(_onConfigChanged);
+    if (kDebugMode && !Monetix.isInternalConstruction) {
+      debugPrint(
+        '⚠️ Warning: Direct construction of MonetizationService bypasses the Monetix facade. '
+        'Prefer using Monetix.initialize() or Monetix.bootstrap() to ensure proper lifecycle coordination.'
+      );
+    }
   }
 
   bool get isAdFree => _isPremium || (rewardedAdService?.isAdFree ?? false);
