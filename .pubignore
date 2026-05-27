@@ -1,0 +1,13 @@
+# Exclude build artifacts
+build/
+.dart_tool/
+.flutter-plugins-dependencies
+.DS_Store
+
+# Exclude large APKs
+*.apk
+*.ipa
+
+# Exclude local Android signing files
+example/android/upload-keystore.jks
+example/android/key.properties

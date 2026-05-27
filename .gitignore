@@ -1,0 +1,31 @@
+# Dependency directories
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Flutter/Dart specific
+pubspec.lock
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Flutter.podspec
+android/local.properties
+android/key.properties
+android/app/src/main/res/values/strings.xml
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Mac specific
+.DS_Store
+
+# Web specific
+.dart_tool/
+build/
