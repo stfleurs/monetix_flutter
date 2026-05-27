@@ -23,9 +23,11 @@ Native ads have higher CPM but lower fill rates and can fail for various reasons
 
 ### How it Works
 1.  `MonetizedNativeAd` requests a high-value Native ad.
-2.  The fallback Banner ad loading is **deferred lazily**: instead of preloading both in parallel (which wastes network bandwidth and triggers redundant requests), the banner ad is loaded *only* if the Native ad request fails or exceeds the configurable 5-second timeout (`_nativeFallbackTimeout`).
-3.  If the config explicitly enables `simulateNativeFailure`, the widget directly loads the fallback Banner ad without even attempting a native load.
-4.  This ensures you never have "empty holes" in your UI while keeping network overhead at an absolute minimum.
+2.  The fallback Banner ad loading is **triggered only on explicit failure**: if the Native SDK calls `onAdFailedToLoad`, the fallback loads immediately. A cancelled safety timer (5s) also catches cases where the SDK never calls either callback.
+3.  If the native ad loads successfully, the timer is cancelled and the fallback is never requested — preventing duplicate network requests that were guaranteed under the old timeout-based design.
+4.  If the config explicitly enables `simulateNativeFailure`, the widget directly loads the fallback Banner ad without even attempting a native load.
+5.  On weak mobile networks (3-7s latency is common globally), this saves one ad request per impression attempt compared to the previous parallel-loading approach.
+6.  This ensures you never have "empty holes" in your UI while keeping network overhead at an absolute minimum.
 
 ## Rewarded Break Logic
 

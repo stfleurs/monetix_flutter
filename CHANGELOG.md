@@ -1,3 +1,13 @@
+## 0.2.0
+- **Request Burst Prevention**: Added `MonetixRequestCoordinator` — a global scheduler that debounces gate cascades, deduplicates same-type requests, and enforces per-ad-type minimum spacing. Exposes `Monetix.debugMetrics()` for observability.
+- **Native Fallback Redesign**: Fallback banner now only loads when the native ad explicitly fails, not pre-emptively after a 5s timer. The safety timer is cancellable and cleaned up on widget disposal. Prevents guaranteed double-requests under moderate latency.
+- **Interstitial Jittered Cooldown**: All reload paths use a 2-5s jittered delay with a cancellable `Timer` instead of immediate `loadInterstitialAd()`. Timer is cancelled on premium unlock, config disable, and service disposal.
+- **Gate Cascade Debouncing**: `MonetizationGate._onStateChanged()` uses a 50ms debounce timer to coalesce rapid state changes from config, premium, and rewarded sources into a single notification.
+- **Debug Panel Overhaul**: `MonetixDebugPanel` now inherits the host app's color scheme and includes mutation toggles for Global Ads Enabled, Simulate Native Failure, and Enable Rewarded Break. Timeline log renders when `DiagnosticAdAnalytics` is used.
+- **Debug Interface Hooks**: Added `setPremiumForDebug()` to `IAdStatusProvider` and `setAdsEnabledForDebug()` / `setSimulateNativeFailureForDebug()` / `setEnableRewardedBreakForDebug()` to `IAdConfigProvider` — no-op by default, overridable by any implementation.
+- **Monetix.wire()**: New static method to adopt externally-created instances into the static facade for Provider-heavy setups.
+- **DiagnosticAdAnalytics**: `IAdAnalytics` wrapper that maintains a 50-entry circular buffer of monetization events for the debug timeline.
+
 ## 0.1.9
 - **Non-Blocking Initialization**: Restructured setup into synchronous `Monetix.bootstrap(...)` and asynchronous `Monetix.initialize(...)` to resolve heavy startup bottlenecks and Android `DeadObjectException` emulator crashes.
 - **State & Readiness Engine**: Introduced `MonetixState` enum and `state`, `isReady`, and `ready` future properties to natively support offline fallback and graceful degraded ad states.

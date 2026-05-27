@@ -103,6 +103,7 @@ graph TD
         Rewarded[Rewarded Logic & Cooldowns]
         Consent[UMP Consent Management]
         Fallback[Smart Fallback Orchestrator]
+        Coordinator[Request Coordinator]
     end
     
     EngineNode --> Analytics[IAdAnalytics]
@@ -111,6 +112,9 @@ graph TD
     
     Fallback --> AdMob[Google Mobile Ads]
     Fallback --> Others[Future Provider Support]
+    
+    Coordinator -.->|Spaces & Deduplicates| Fallback
+    Coordinator -.->|Metrics| Analytics
 ```
 
 ### 🏗️ The Three Layers of Monetix
@@ -240,7 +244,7 @@ if (Monetix.isReady) {
 Monetix includes pre-built widgets to help you test your monetization strategy live. These are designed to be tucked away in your admin settings or behind a secret gesture.
 
 #### MonetixDebugPanel
-A comprehensive control center to toggle premium status, enable/disable ads, and simulate ad failures.
+A comprehensive control center with live ad engine status indicators, active suppression reasons, mutation toggles (premium, global ads, native failure simulation, rewarded break), rewarded break grant/expire controls, and a 50-entry monetization timeline log.
 
 ```dart
 // Open it from any button
@@ -248,6 +252,12 @@ onTap: () => Navigator.push(
   context, 
   MaterialPageRoute(builder: (_) => const MonetixDebugPanel()),
 )
+```
+
+```dart
+// Read coordinator metrics for QA/observability
+final metrics = Monetix.debugMetrics();
+print(metrics['suppressionRate']); // e.g. 0.35 (35% of requests suppressed)
 ```
 
 #### MonetixAdminGate
