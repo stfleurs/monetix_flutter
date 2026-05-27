@@ -11,6 +11,40 @@ void main() {
   runApp(const MonetixPlaygroundApp());
 }
 
+/// Captures Provider-resolved instances and wires them into the static
+/// [Monetix] facade so debug panels and coordinator can access them
+/// without being descendants of this Provider tree.
+class _MonetixWire extends StatefulWidget {
+  final Widget child;
+  const _MonetixWire({required this.child});
+
+  @override
+  State<_MonetixWire> createState() => _MonetixWireState();
+}
+
+class _MonetixWireState extends State<_MonetixWire> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _wire());
+  }
+
+  void _wire() {
+    if (!mounted) return;
+    Monetix.wire(
+      service: context.read<MonetizationService>(),
+      rewarded: context.read<RewardedMonetizationService>(),
+      gate: context.read<MonetizationGate>(),
+      config: context.read<IAdConfigProvider>(),
+      status: context.read<IAdStatusProvider>(),
+      analytics: context.read<IAdAnalytics>(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class MonetixPlaygroundApp extends StatelessWidget {
   const MonetixPlaygroundApp({super.key});
 
@@ -76,11 +110,13 @@ class MonetixPlaygroundApp extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp(
-        title: 'Monetix Playground',
-        debugShowCheckedModeBanner: false,
-        theme: _buildPremiumTheme(),
-        home: const HomeScreen(),
+      child: _MonetixWire(
+        child: MaterialApp(
+          title: 'Monetix Playground',
+          debugShowCheckedModeBanner: false,
+          theme: _buildPremiumTheme(),
+          home: const HomeScreen(),
+        ),
       ),
     );
   }

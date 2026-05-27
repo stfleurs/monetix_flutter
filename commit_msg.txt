@@ -1,61 +1,19 @@
-feat(core): Add request coordination layer and burst prevention
+fix(example): Wire Provider instances into static facade for debug panel
 
-Implements a multi-phase architecture to prevent ad request amplification,
-where independent services and widgets can unintentionally synchronize and
-spike requests simultaneously on state changes.
+The MonetixDebugPanel accesses Monetix.gate and Monetix.rewarded through
+statics, but the example app created everything via Provider without
+registering those instances. This caused "Monetix not initialized" errors
+when opening the debug panel.
 
-## Native fallback redesign (monetized_native_ad.dart)
+Changes:
+- Added Monetix.wire() — adopts externally-created instances into the
+  static facade without creating new ones. Unlike bootstrap(), this is
+  for Provider-based setups where the app owns the lifecycle.
+- Added _MonetixWire helper to the example that captures Provider-resolved
+  instances after the first frame and wires them into the statics.
+- Added diagnostic_ad_analytics.dart to the barrel export.
 
-- Replaced the unconditional 5s Future.delayed fallback timer with a
-  cancellable Timer. The fallback banner now only loads when the native
-  ad explicitly fails, not pre-emptively after a timeout.
-- onAdLoaded cancels the timer immediately and discards late-arriving
-  native ads that belong to a superseded load.
-- Timer also cancelled in _disposeAds() and dispose() to prevent
-  stale callbacks after widget disposal.
-
-Previously, under moderate network latency the timer guaranteed a parallel
-native + banner request pair on every impression attempt, inflating fill
-requests without increasing impressions proportionally.
-
-## Interstitial reload cooldown (monetization_service.dart)
-
-- All reload paths (onDismissed, onFailedToShow, show exception) now call
-  _scheduleInterstitialReload() instead of loadInterstitialAd() directly.
-- Adds a jittered 2-5 second cooldown (2000ms base + random 0-3000ms) to
-  desynchronize burst triggers from gate cascades, rapid navigation, or
-  transient SDK instability.
-- Replaced the bare Future.delayed with a cancellable Timer that is
-  cleaned up on premium unlock, config disable, and service disposal.
-
-## MonetixRequestCoordinator (new)
-
-A lightweight global scheduler that prevents burst synchronization when
-multiple independent systems trigger ad loads simultaneously.
-
-Key behavior:
-- Priority ordering: rewarded > interstitial > banner > native
-- Per-type minimum spacing (e.g. 600ms between banner loads)
-- 50ms debounce window coalesces cascades into a single drain cycle
-- Same-type deduplication within a batch suppresses redundant loads
-- Built-in metrics counters: attempted, suppressed, delayed, executed,
-  drainCycles, suppressionRate, executionRate
-
-Currently advisory -- services and widgets can bypass it. The counters
-provide observability to determine whether making it authoritative is
-worthwhile.
-
-## Gate cascade debouncing (monetization_gate.dart)
-
-- _onStateChanged() now uses a 50ms debounce timer instead of calling
-  notifyListeners() synchronously. This prevents a single premium or
-  config change from triggering all visible ad widgets to re-evaluate
-  and fire load requests in the same frame.
-
-## Debug metrics API (monetix_facade.dart)
-
-- Added Monetix.debugMetrics() returning a structured map of coordinator
-  counters including suppression rate, for use in debugging, QA, and
-  verifying burst prevention effectiveness.
+Now toggling premium, ad-free breaks, and config flags in the Provider
+tree propagates live to the debug panel and any code accessing statics.
 
 Co-authored-by: CommandCodeBot <noreply@commandcode.ai>

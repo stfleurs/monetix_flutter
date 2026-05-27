@@ -8,6 +8,7 @@ import 'monetization_service.dart';
 import 'monetix_request_coordinator.dart';
 import 'rewarded_monetization_service.dart';
 import 'simple_implementations.dart';
+import 'diagnostic_ad_analytics.dart';
 
 /// The lifecycle and synchronization state of the Monetix framework.
 enum MonetixState {
@@ -180,6 +181,35 @@ class Monetix {
     return _coordinatorInstance!.metrics.toMap();
   }
 
+  /// Wires externally-created instances into the static facade, allowing
+  /// the debug panel and coordinator to reference them without going through
+  /// Provider.  Call this after creating your Provider tree.
+  ///
+  /// Unlike [bootstrap], this does not create new instances — it adopts
+  /// the ones you pass in.  Safe to call multiple times; subsequent calls
+  /// are no-ops after the first.
+  static void wire({
+    required MonetizationService service,
+    required RewardedMonetizationService rewarded,
+    required MonetizationGate gate,
+    required IAdConfigProvider config,
+    required IAdStatusProvider status,
+    required IAdAnalytics analytics,
+    MonetixRequestCoordinator? coordinator,
+  }) {
+    if (_state != MonetixState.uninitialized) return;
+
+    _instance = service;
+    _rewardedInstance = rewarded;
+    _gateInstance = gate;
+    _configInstance = config;
+    _statusInstance = status;
+    _analyticsInstance = analytics;
+    _coordinatorInstance = coordinator ?? MonetixRequestCoordinator();
+
+    _state = MonetixState.bootstrapped;
+  }
+
   /// Synchronously bootstraps and prepares all singleton instances.
   /// This registers all core services synchronously to prevent `StateError`s during startup.
   static void bootstrap({
@@ -206,7 +236,14 @@ class Monetix {
       testDeviceIds: testDeviceIds,
     );
 
-    final analyticsService = analytics ?? ConsoleAdAnalytics();
+    IAdAnalytics analyticsService = analytics ?? ConsoleAdAnalytics();
+    
+    // Automatically wrap analytics for diagnostics in debug mode
+    assert(() {
+      analyticsService = DiagnosticAdAnalytics(analyticsService);
+      return true;
+    }());
+    
     final statusProvider = status ?? BasicAdStatus();
 
     _configInstance = configProvider;

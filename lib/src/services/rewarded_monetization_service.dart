@@ -359,6 +359,40 @@ class RewardedMonetizationService extends ChangeNotifier {
   int? _cachedExpiryMs;
   List<int> _cachedWatchTimes = [];
 
+  /// Grants a reward manually for testing purposes.
+  /// 
+  /// This method uses an assert to ensure it is completely compiled out
+  /// in release mode, preventing any security exploits.
+  void grantRewardForTesting(Duration duration) {
+    assert(() {
+      final now = _safeNowMs();
+      final newExpiry = now + duration.inMilliseconds;
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setInt(_prefExpiry, newExpiry);
+      });
+      _cachedExpiryMs = newExpiry;
+      _scheduleExpiryNotify();
+      notifyListeners();
+      return true;
+    }(), 'grantRewardForTesting should only be called in debug mode.');
+  }
+
+  /// Expires the current reward manually for testing purposes.
+  /// 
+  /// This method uses an assert to ensure it is completely compiled out
+  /// in release mode, preventing any security exploits.
+  void expireRewardForTesting() {
+    assert(() {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.remove(_prefExpiry);
+      });
+      _cachedExpiryMs = null;
+      _expiryTimer?.cancel();
+      notifyListeners();
+      return true;
+    }(), 'expireRewardForTesting should only be called in debug mode.');
+  }
+
   Future<void> _recordWatch(int nowMs) async {
     final prefs = await SharedPreferences.getInstance();
     final times = _decodeWatchTimes(prefs.getString(_prefWatchTimes));
