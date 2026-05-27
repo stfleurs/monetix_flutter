@@ -37,7 +37,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       _currentStatus = status;
       _currentStatus?.addListener(_onStateChanged);
     }
-    
+
     final analytics = Monetix.getAnalytics(context);
     if (analytics is DiagnosticAdAnalytics) {
       if (_analytics != analytics) {
@@ -46,7 +46,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
         _analytics?.addListener(_onStateChanged);
       }
     }
-    
+
     Monetix.gate.addListener(_onStateChanged);
     Monetix.rewarded.addListener(_onStateChanged);
   }
@@ -84,7 +84,11 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Monetization Diagnostics', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text('Monetization Diagnostics',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -129,7 +133,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
     final interstitial = gate.evaluateInterstitial();
     final native = gate.evaluateNative();
     final banner = gate.evaluateBanner();
-    
+
     final rewardedLoading = Monetix.rewarded.isLoading;
 
     return Column(
@@ -137,24 +141,51 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text('AD ENGINE STATUS', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          child: Text('AD ENGINE STATUS',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2)),
         ),
         _buildSectionContainer(
           child: Column(
             children: [
               Row(
                 children: [
-                  Expanded(child: _buildStatusCard('Rewarded', rewardedLoading ? 'LOADING' : (rewarded.allowed ? 'READY' : 'SUPPRESSED'), rewardedLoading ? Colors.orange : (rewarded.allowed ? Colors.green : Colors.orange))),
+                  Expanded(
+                      child: _buildStatusCard(
+                          'Rewarded',
+                          rewardedLoading
+                              ? 'LOADING'
+                              : (rewarded.allowed ? 'READY' : 'SUPPRESSED'),
+                          rewardedLoading
+                              ? Colors.orange
+                              : (rewarded.allowed
+                                  ? Colors.green
+                                  : Colors.orange))),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildStatusCard('Interstitial', interstitial.allowed ? 'READY' : 'SUPPRESSED', interstitial.allowed ? Colors.green : Colors.orange)),
+                  Expanded(
+                      child: _buildStatusCard(
+                          'Interstitial',
+                          interstitial.allowed ? 'READY' : 'SUPPRESSED',
+                          interstitial.allowed ? Colors.green : Colors.orange)),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _buildStatusCard('Native', native.allowed ? 'READY' : 'SUPPRESSED', native.allowed ? Colors.green : Colors.orange)),
+                  Expanded(
+                      child: _buildStatusCard(
+                          'Native',
+                          native.allowed ? 'READY' : 'SUPPRESSED',
+                          native.allowed ? Colors.green : Colors.orange)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildStatusCard('Banner', banner.allowed ? 'READY' : 'SUPPRESSED', banner.allowed ? Colors.green : Colors.orange)),
+                  Expanded(
+                      child: _buildStatusCard(
+                          'Banner',
+                          banner.allowed ? 'READY' : 'SUPPRESSED',
+                          banner.allowed ? Colors.green : Colors.orange)),
                 ],
               ),
             ],
@@ -174,13 +205,22 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(title,
+              style: const TextStyle(color: Colors.white70, fontSize: 13)),
           const SizedBox(height: 6),
           Row(
             children: [
-              Container(width: 6, height: 6, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
+              Container(
+                  width: 6,
+                  height: 6,
+                  decoration:
+                      BoxDecoration(color: dotColor, shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Text(status, style: TextStyle(color: dotColor, fontSize: 11, fontWeight: FontWeight.bold)),
+              Text(status,
+                  style: TextStyle(
+                      color: dotColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold)),
             ],
           )
         ],
@@ -188,9 +228,10 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
     );
   }
 
-  Widget _buildActiveSuppressionsSection(IAdStatusProvider status, IAdConfigProvider config, MonetizationGate gate) {
+  Widget _buildActiveSuppressionsSection(IAdStatusProvider status,
+      IAdConfigProvider config, MonetizationGate gate) {
     bool hasBreak = Monetix.rewarded.isAdFree;
-    
+
     // Collect active reasons
     List<String> reasons = [];
     if (status.isPremium) reasons.add('PREMIUM');
@@ -202,7 +243,12 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text('ACTIVE SUPPRESSIONS', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          child: Text('ACTIVE SUPPRESSIONS',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2)),
         ),
         _buildSectionContainer(
           child: Column(
@@ -217,22 +263,35 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Divider(color: Colors.white10, height: 1),
               ),
-              const Text('Active Suppression Reasons:', style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const Text('Active Suppression Reasons:',
+                  style: TextStyle(color: Colors.white70, fontSize: 13)),
               const SizedBox(height: 8),
               if (reasons.isEmpty)
-                const Text('NONE', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text('NONE',
+                    style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: reasons.map((r) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(r, style: const TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
-                )).toList(),
+                children: reasons
+                    .map((r) => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            border:
+                                Border.all(color: Colors.red.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(r,
+                              style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
+                        ))
+                    .toList(),
               ),
             ],
           ),
@@ -248,9 +307,14 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
         Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
         Row(
           children: [
-            Icon(active ? Icons.circle : Icons.circle_outlined, size: 12, color: active ? Colors.orange : Colors.white30),
+            Icon(active ? Icons.circle : Icons.circle_outlined,
+                size: 12, color: active ? Colors.orange : Colors.white30),
             const SizedBox(width: 6),
-            Text(active ? 'ACTIVE' : 'INACTIVE', style: TextStyle(color: active ? Colors.orange : Colors.white30, fontSize: 11, fontWeight: FontWeight.bold)),
+            Text(active ? 'ACTIVE' : 'INACTIVE',
+                style: TextStyle(
+                    color: active ? Colors.orange : Colors.white30,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold)),
           ],
         )
       ],
@@ -263,7 +327,12 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text('MUTATION CONTROLS', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          child: Text('MUTATION CONTROLS',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2)),
         ),
         _buildSectionContainer(
           child: Column(
@@ -275,15 +344,22 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Simulate Pro Unlock', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                        const Text('Simulate Pro Unlock',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600)),
                         const SizedBox(height: 2),
-                        Text('Toggles premium feature access & ad suppression', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                        Text('Toggles premium feature access & ad suppression',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12)),
                       ],
                     ),
                   ),
                   Switch(
                     value: status.isPremium,
-                    activeColor: Colors.white,
+                    activeThumbColor: Colors.white,
                     activeTrackColor: Colors.orange,
                     onChanged: (val) {
                       if (status is BasicAdStatus) {
@@ -303,16 +379,19 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         foregroundColor: Colors.orange,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
                         assert(() {
-                          Monetix.rewarded.grantRewardForTesting(const Duration(minutes: 5));
+                          Monetix.rewarded.grantRewardForTesting(
+                              const Duration(minutes: 5));
                           return true;
                         }());
                       },
                       icon: const Icon(Icons.timer_outlined, size: 18),
-                      label: const Text('Add 5 Min Break', style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text('Add 5 Min Break',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -323,7 +402,8 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         foregroundColor: Colors.red[300],
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
                         assert(() {
@@ -332,7 +412,8 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         }());
                       },
                       icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('Expire Break', style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text('Expire Break',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -350,14 +431,20 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text('MONETIZATION TIMELINE LOG (LAST 50)', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          child: Text('MONETIZATION TIMELINE LOG (LAST 50)',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2)),
         ),
         _buildSectionContainer(
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: analytics.logs.length,
-            separatorBuilder: (context, index) => const Divider(color: Colors.white10, height: 16),
+            separatorBuilder: (context, index) =>
+                const Divider(color: Colors.white10, height: 16),
             itemBuilder: (context, index) {
               final log = analytics.logs[index];
               return Column(
@@ -366,10 +453,18 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(log.event, style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text(log.event,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600)),
                       Text(
                         '${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}:${log.timestamp.second.toString().padLeft(2, '0')}.${log.timestamp.millisecond.toString().padLeft(3, '0')}',
-                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontFamily: 'monospace', fontSize: 11),
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontFamily: 'monospace',
+                            fontSize: 11),
                       ),
                     ],
                   ),
@@ -377,7 +472,10 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                     const SizedBox(height: 4),
                     Text(
                       log.details.toString(),
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontFamily: 'monospace', fontSize: 11),
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                          fontFamily: 'monospace',
+                          fontSize: 11),
                     )
                   ]
                 ],

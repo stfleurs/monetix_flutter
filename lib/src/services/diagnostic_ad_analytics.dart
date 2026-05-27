@@ -31,42 +31,93 @@ class DiagnosticAdAnalytics extends ChangeNotifier implements IAdAnalytics {
   }
 
   @override
-  Future<void> logAdRequest({required String adType, required String adUnitId, required String screen, required String placement}) async {
-    _addLog('${adType}_load_started', {'screen': screen, 'placement': placement});
+  Future<void> logAdRequest(
+      {required String adType,
+      required String adUnitId,
+      required String screen,
+      required String placement}) async {
+    _addLog(
+        '${adType}_load_started', {'screen': screen, 'placement': placement});
     if (_delegate != null) {
-      await _delegate!.logAdRequest(adType: adType, adUnitId: adUnitId, screen: screen, placement: placement);
+      await _delegate.logAdRequest(
+          adType: adType,
+          adUnitId: adUnitId,
+          screen: screen,
+          placement: placement);
     }
   }
 
   @override
-  Future<void> logAdImpression({required String adType, required String adUnitId, required String screen, required String placement, int? loadDurationMs, bool isFallback = false}) async {
-    _addLog('${adType}_load_success', {'screen': screen, 'placement': placement, 'isFallback': isFallback});
+  Future<void> logAdImpression(
+      {required String adType,
+      required String adUnitId,
+      required String screen,
+      required String placement,
+      int? loadDurationMs,
+      bool isFallback = false}) async {
+    _addLog('${adType}_load_success',
+        {'screen': screen, 'placement': placement, 'isFallback': isFallback});
     if (_delegate != null) {
-      await _delegate!.logAdImpression(adType: adType, adUnitId: adUnitId, screen: screen, placement: placement, loadDurationMs: loadDurationMs, isFallback: isFallback);
+      await _delegate.logAdImpression(
+          adType: adType,
+          adUnitId: adUnitId,
+          screen: screen,
+          placement: placement,
+          loadDurationMs: loadDurationMs,
+          isFallback: isFallback);
     }
   }
 
   @override
-  Future<void> logAdFailure({required String adType, required String adUnitId, required String errorCode, required String screen, required String placement}) async {
-    _addLog('${adType}_load_failed', {'error': errorCode, 'screen': screen, 'placement': placement});
+  Future<void> logAdFailure(
+      {required String adType,
+      required String adUnitId,
+      required String errorCode,
+      required String screen,
+      required String placement}) async {
+    _addLog('${adType}_load_failed',
+        {'error': errorCode, 'screen': screen, 'placement': placement});
     if (_delegate != null) {
-      await _delegate!.logAdFailure(adType: adType, adUnitId: adUnitId, errorCode: errorCode, screen: screen, placement: placement);
+      await _delegate.logAdFailure(
+          adType: adType,
+          adUnitId: adUnitId,
+          errorCode: errorCode,
+          screen: screen,
+          placement: placement);
     }
   }
 
   @override
-  Future<void> logAdRevenue({required double value, required String currency, required String adType, required String adUnitId, required String screen, required String placement}) async {
-    _addLog('revenue_earned', {'value': value, 'currency': currency, 'adType': adType});
+  Future<void> logAdRevenue(
+      {required double value,
+      required String currency,
+      required String adType,
+      required String adUnitId,
+      required String screen,
+      required String placement}) async {
+    _addLog('revenue_earned',
+        {'value': value, 'currency': currency, 'adType': adType});
     if (_delegate != null) {
-      await _delegate!.logAdRevenue(value: value, currency: currency, adType: adType, adUnitId: adUnitId, screen: screen, placement: placement);
+      await _delegate.logAdRevenue(
+          value: value,
+          currency: currency,
+          adType: adType,
+          adUnitId: adUnitId,
+          screen: screen,
+          placement: placement);
     }
   }
 
   @override
-  Future<void> logAdRewardEarned({required String adType, required String screen, required String placement}) async {
-    _addLog('reward_earned', {'adType': adType, 'screen': screen, 'placement': placement});
+  Future<void> logAdRewardEarned(
+      {required String adType,
+      required String screen,
+      required String placement}) async {
+    _addLog('reward_earned',
+        {'adType': adType, 'screen': screen, 'placement': placement});
     if (_delegate != null) {
-      await _delegate!.logAdRewardEarned(adType: adType, screen: screen, placement: placement);
+      await _delegate.logAdRewardEarned(
+          adType: adType, screen: screen, placement: placement);
     }
   }
 
@@ -74,7 +125,7 @@ class DiagnosticAdAnalytics extends ChangeNotifier implements IAdAnalytics {
   void startPostAdWindow(String adType) {
     _addLog('${adType}_dismissed');
     if (_delegate != null) {
-      _delegate!.startPostAdWindow(adType);
+      _delegate.startPostAdWindow(adType);
     }
   }
 }

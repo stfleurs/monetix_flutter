@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:monetix_flutter/monetix_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/revenue_cat_ad_status_provider.dart';
-import 'debug_panel_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -20,14 +19,10 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.bug_report_outlined),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const DebugPanelScreen()),
+              MaterialPageRoute(builder: (_) => const MonetixDebugPanel()),
             ),
           ),
         ],
-      ),
-      floatingActionButton: const MonetixAdminGate(
-        showIf: true, // Always show in playground
-        child: MonetixDebugButton(),
       ),
       body: SingleChildScrollView(
         child: Column(

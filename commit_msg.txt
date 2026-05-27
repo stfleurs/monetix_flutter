@@ -1,19 +1,12 @@
-fix(example): Wire Provider instances into static facade for debug panel
+refactor(example): Unify duplicate debug panels
 
-The MonetixDebugPanel accesses Monetix.gate and Monetix.rewarded through
-statics, but the example app created everything via Provider without
-registering those instances. This caused "Monetix not initialized" errors
-when opening the debug panel.
+The example app had two debug panels — DebugPanelScreen (AppBar button)
+and MonetixDebugPanel (FAB). Both served the same purpose but with
+different UIs and capabilities.
 
 Changes:
-- Added Monetix.wire() — adopts externally-created instances into the
-  static facade without creating new ones. Unlike bootstrap(), this is
-  for Provider-based setups where the app owns the lifecycle.
-- Added _MonetixWire helper to the example that captures Provider-resolved
-  instances after the first frame and wires them into the statics.
-- Added diagnostic_ad_analytics.dart to the barrel export.
-
-Now toggling premium, ad-free breaks, and config flags in the Provider
-tree propagates live to the debug panel and any code accessing statics.
+- Point AppBar button at MonetixDebugPanel and remove the FAB
+- Delete the now-unused DebugPanelScreen
+- Remove unused debug_panel_screen import from home_screen.dart
 
 Co-authored-by: CommandCodeBot <noreply@commandcode.ai>
