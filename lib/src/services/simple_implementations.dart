@@ -43,6 +43,10 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
     _simulateNativeFailure = value;
     notifyListeners();
   }
+  @override void setAdsEnabledForDebug(bool value) => adsEnabled = value;
+  @override void setSimulateNativeFailureForDebug(bool value) => simulateNativeFailure = value;
+  @override void setEnableRewardedBreakForDebug(bool value) => enableRewardedBreak = value;
+
   SimpleAdConfig({
     this.bannerAdUnitId,
     this.interstitialAdUnitId,
@@ -112,6 +116,9 @@ class BasicAdStatus extends ChangeNotifier implements IAdStatusProvider {
   }
 
   @override Stream<bool> get premiumStatusStream => _controller.stream;
+
+  @override
+  void setPremiumForDebug(bool value) => isPremium = value;
 
   @override
   void dispose() {

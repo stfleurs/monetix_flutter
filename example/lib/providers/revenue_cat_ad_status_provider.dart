@@ -25,6 +25,9 @@ class RevenueCatAdStatusProvider extends ChangeNotifier implements IAdStatusProv
   }
 
   @override
+  void setPremiumForDebug(bool value) => simulateSubscriptionActive(value);
+
+  @override
   void showPurchaseScreen(dynamic context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('💰 RevenueCat Paywall would open here')),
@@ -76,6 +79,17 @@ class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
     notifyListeners();
   }
   @override List<String> get testDeviceIds => [];
+
+  @override
+  void setAdsEnabledForDebug(bool value) => setAdsEnabled(value);
+
+  @override
+  void setSimulateNativeFailureForDebug(bool value) =>
+      setSimulateNativeFailure(value);
+
+  @override
+  void setEnableRewardedBreakForDebug(bool value) =>
+      setEnableRewardedBreak(value);
 
   void setAdsEnabled(bool value) {
     _adsEnabled = value;

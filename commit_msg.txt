@@ -1,12 +1,23 @@
-refactor(example): Unify duplicate debug panels
+fix(debug): Restore mutation controls and timeline in debug panel
 
-The example app had two debug panels — DebugPanelScreen (AppBar button)
-and MonetixDebugPanel (FAB). Both served the same purpose but with
-different UIs and capabilities.
+Three bugs fixed:
 
-Changes:
-- Point AppBar button at MonetixDebugPanel and remove the FAB
-- Delete the now-unused DebugPanelScreen
-- Remove unused debug_panel_screen import from home_screen.dart
+1. Premium switch was a dead toggle — the panel cast `status is BasicAdStatus`
+   which always failed for custom providers. Added `setPremiumForDebug(bool)`
+   to the `IAdStatusProvider` interface so the panel works with any
+   implementation.
+
+2. Missing config toggles — Global Ads Enabled, Simulate Native Failure, and
+   Enable Rewarded Break were in the old DebugPanelScreen but never ported to
+   MonetixDebugPanel. Added `setAdsEnabledForDebug`, `setSimulateNativeFailureForDebug`,
+   and `setEnableRewardedBreakForDebug` to `IAdConfigProvider` and wired them
+   into the mutation controls section.
+
+3. Timeline was empty — the example used raw PlaygroundAnalytics instead of
+   wrapping it in DiagnosticAdAnalytics, so the `is DiagnosticAdAnalytics` check
+   failed. Wrapped it with DiagnosticAdAnalytics(PlaygroundAnalytics()).
+
+Also added debug method overrides to RevenueCatAdStatusProvider and DebugAdConfig
+in the example, and wired a standalone MonetixRequestCoordinator into the facade.
 
 Co-authored-by: CommandCodeBot <noreply@commandcode.ai>

@@ -38,6 +38,7 @@ class _MonetixWireState extends State<_MonetixWire> {
       config: context.read<IAdConfigProvider>(),
       status: context.read<IAdStatusProvider>(),
       analytics: context.read<IAdAnalytics>(),
+      coordinator: MonetixRequestCoordinator(),
     );
   }
 
@@ -72,9 +73,9 @@ class MonetixPlaygroundApp extends StatelessWidget {
           update: (_, config, __) => config,
         ),
         
-        // 3. Analytics Provider
+        // 3. Analytics Provider (wrapped in DiagnosticAdAnalytics for timeline)
         Provider<IAdAnalytics>(
-          create: (_) => PlaygroundAnalytics(),
+          create: (_) => DiagnosticAdAnalytics(PlaygroundAnalytics()),
         ),
         
         // 4. Rewarded Service

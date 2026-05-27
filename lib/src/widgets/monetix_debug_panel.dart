@@ -107,7 +107,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
           const SizedBox(height: 16),
           _buildActiveSuppressionsSection(status, config, gate),
           const SizedBox(height: 16),
-          _buildMutationControlsSection(status),
+          _buildMutationControlsSection(status, config),
           const SizedBox(height: 16),
           if (_analytics != null) _buildTimelineLogSection(_analytics!),
           const SizedBox(height: 32),
@@ -321,7 +321,8 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
     );
   }
 
-  Widget _buildMutationControlsSection(IAdStatusProvider status) {
+  Widget _buildMutationControlsSection(
+      IAdStatusProvider status, IAdConfigProvider config) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -362,9 +363,109 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                     activeThumbColor: Colors.white,
                     activeTrackColor: Colors.orange,
                     onChanged: (val) {
-                      if (status is BasicAdStatus) {
-                        status.isPremium = val;
-                      }
+                      status.setPremiumForDebug(val);
+                    },
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Divider(color: Colors.white10, height: 1),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Global Ads Enabled',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text('Simulate remote config toggle',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: config.adsEnabled,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: Colors.green,
+                    onChanged: (val) {
+                      config.setAdsEnabledForDebug(val);
+                    },
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Divider(color: Colors.white10, height: 1),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Simulate Native Failure',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text('Instantly switch to preloaded banner',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: config.simulateNativeFailure,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: Colors.orange,
+                    onChanged: (val) {
+                      config.setSimulateNativeFailureForDebug(val);
+                    },
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Divider(color: Colors.white10, height: 1),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Enable Rewarded Break',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text('Show/Hide the "Pause Ads" button',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: config.enableRewardedBreak,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: Colors.blue,
+                    onChanged: (val) {
+                      config.setEnableRewardedBreakForDebug(val);
                     },
                   ),
                 ],
