@@ -1,8 +1,3 @@
-fix(debug): Use host app's color scheme instead of hardcoded dark theme
-
-The debug panel hardcoded dark colors (0xFF121418, 0xFF1C1E24, etc.)
-making it clash with any non-dark host app. Now derives all surface,
-card, and text colors from Theme.of(context).colorScheme so it blends
-seamlessly with the host app's theme.
+fix(test): Add missing IAdConfigProvider debug methods to MockConfig
 
 Co-authored-by: CommandCodeBot <noreply@commandcode.ai>
