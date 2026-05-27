@@ -1,23 +1,8 @@
-fix(debug): Restore mutation controls and timeline in debug panel
+fix(debug): Use host app's color scheme instead of hardcoded dark theme
 
-Three bugs fixed:
-
-1. Premium switch was a dead toggle — the panel cast `status is BasicAdStatus`
-   which always failed for custom providers. Added `setPremiumForDebug(bool)`
-   to the `IAdStatusProvider` interface so the panel works with any
-   implementation.
-
-2. Missing config toggles — Global Ads Enabled, Simulate Native Failure, and
-   Enable Rewarded Break were in the old DebugPanelScreen but never ported to
-   MonetixDebugPanel. Added `setAdsEnabledForDebug`, `setSimulateNativeFailureForDebug`,
-   and `setEnableRewardedBreakForDebug` to `IAdConfigProvider` and wired them
-   into the mutation controls section.
-
-3. Timeline was empty — the example used raw PlaygroundAnalytics instead of
-   wrapping it in DiagnosticAdAnalytics, so the `is DiagnosticAdAnalytics` check
-   failed. Wrapped it with DiagnosticAdAnalytics(PlaygroundAnalytics()).
-
-Also added debug method overrides to RevenueCatAdStatusProvider and DebugAdConfig
-in the example, and wired a standalone MonetixRequestCoordinator into the facade.
+The debug panel hardcoded dark colors (0xFF121418, 0xFF1C1E24, etc.)
+making it clash with any non-dark host app. Now derives all surface,
+card, and text colors from Theme.of(context).colorScheme so it blends
+seamlessly with the host app's theme.
 
 Co-authored-by: CommandCodeBot <noreply@commandcode.ai>
