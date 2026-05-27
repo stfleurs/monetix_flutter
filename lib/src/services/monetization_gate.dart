@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'rewarded_monetization_service.dart';
+import 'monetix_request_coordinator.dart';
 
 /// Reasons why an ad is either allowed or blocked from being displayed.
 enum AdVisibilityReason {
@@ -42,25 +44,37 @@ class MonetizationGate extends ChangeNotifier {
   final IAdConfigProvider _configProvider;
   final IAdStatusProvider _statusProvider;
   final RewardedMonetizationService _rewardedService;
+  final MonetixRequestCoordinator? _coordinator;
 
   IAdConfigProvider get configProvider => _configProvider;
   IAdStatusProvider get statusProvider => _statusProvider;
   RewardedMonetizationService get rewardedService => _rewardedService;
 
+  Timer? _debounceTimer;
+  static const Duration _debounceWindow = Duration(milliseconds: 50);
+
   MonetizationGate({
     required IAdConfigProvider configProvider,
     required IAdStatusProvider statusProvider,
     required RewardedMonetizationService rewardedService,
+    MonetixRequestCoordinator? coordinator,
   })  : _configProvider = configProvider,
         _statusProvider = statusProvider,
-        _rewardedService = rewardedService {
+        _rewardedService = rewardedService,
+        _coordinator = coordinator {
     _configProvider.addListener(_onStateChanged);
     _statusProvider.addListener(_onStateChanged);
     _rewardedService.addListener(_onStateChanged);
   }
 
   void _onStateChanged() {
-    notifyListeners();
+    // Debounce: rapid changes from multiple sources coalesce into a single
+    // notification.  This prevents all visible ad widgets from re-evaluating
+    // and firing load requests simultaneously.
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceWindow, () {
+      notifyListeners();
+    });
   }
 
   /// Evaluates standard banner ad visibility.
@@ -115,6 +129,7 @@ class MonetizationGate extends ChangeNotifier {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _configProvider.removeListener(_onStateChanged);
     _statusProvider.removeListener(_onStateChanged);
     _rewardedService.removeListener(_onStateChanged);

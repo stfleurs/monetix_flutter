@@ -61,6 +61,13 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   
   static const Duration _nativeFallbackTimeout = Duration(seconds: 5);
 
+  Timer? _nativeFallbackTimer;
+
+  void _cancelFallbackTimer() {
+    _nativeFallbackTimer?.cancel();
+    _nativeFallbackTimer = null;
+  }
+
   bool _canRetry() {
     if (_lastFailureTime == null) return true;
     return DateTime.now().difference(_lastFailureTime!) >
@@ -135,6 +142,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   }
 
   void _disposeAds() {
+    _cancelFallbackTimer();
     _nativeAd?.dispose();
     _fallbackBannerAd?.dispose();
     _nativeAd = null;
@@ -189,6 +197,12 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
         request: const AdRequest(),
         listener: NativeAdListener(
           onAdLoaded: (ad) {
+            _cancelFallbackTimer();
+            if (_nativeAd != null && _nativeAd != ad) {
+              // A newer load is already in-flight; discard this late arrival.
+              ad.dispose();
+              return;
+            }
             if (_nativeLoadStartTime != null) {
               _nativeLoadDurationMs = DateTime.now()
                   .difference(_nativeLoadStartTime!)
@@ -225,6 +239,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
                 _isLoading = false;
                 _nativeFailed = true;
               });
+              _cancelFallbackTimer();
               _loadFallbackBanner();
             }
           },
@@ -274,7 +289,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
       }
     }
 
-    Future.delayed(_nativeFallbackTimeout, () {
+    _nativeFallbackTimer = Timer(_nativeFallbackTimeout, () {
       if (isSafe && !_adLoaded && !_nativeFailed && _isLoading) {
         setState(() {
           _nativeFailed = true;
@@ -379,6 +394,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
 
   @override
   void dispose() {
+    _cancelFallbackTimer();
     _premiumSubscription?.cancel();
     _currentGate?.removeListener(_onGateChanged);
     _nativeAd?.dispose();

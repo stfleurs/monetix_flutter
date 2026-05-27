@@ -5,6 +5,7 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'monetization_gate.dart';
 import 'monetization_service.dart';
+import 'monetix_request_coordinator.dart';
 import 'rewarded_monetization_service.dart';
 import 'simple_implementations.dart';
 
@@ -32,6 +33,7 @@ class Monetix {
   static MonetizationService? _instance;
   static RewardedMonetizationService? _rewardedInstance;
   static MonetizationGate? _gateInstance;
+  static MonetixRequestCoordinator? _coordinatorInstance;
 
   static IAdConfigProvider? _configInstance;
   static IAdStatusProvider? _statusInstance;
@@ -79,6 +81,14 @@ class Monetix {
       throw StateError('Monetix not initialized. Call initialize() or bootstrap() first.');
     }
     return _gateInstance!;
+  }
+
+  /// The global [MonetixRequestCoordinator] instance.
+  static MonetixRequestCoordinator get coordinator {
+    if (_coordinatorInstance == null) {
+      throw StateError('Monetix not initialized. Call initialize() or bootstrap() first.');
+    }
+    return _coordinatorInstance!;
   }
 
   /// The global [IAdConfigProvider] instance.
@@ -161,6 +171,15 @@ class Monetix {
     }
   }
 
+  /// Returns a structured debug snapshot of the coordinator's request metrics.
+  /// Useful for debugging, QA screenshots, and verifying burst suppression.
+  ///
+  /// Returns `null` if Monetix has not been bootstrapped.
+  static Map<String, dynamic>? debugMetrics() {
+    if (_coordinatorInstance == null) return null;
+    return _coordinatorInstance!.metrics.toMap();
+  }
+
   /// Synchronously bootstraps and prepares all singleton instances.
   /// This registers all core services synchronously to prevent `StateError`s during startup.
   static void bootstrap({
@@ -193,6 +212,7 @@ class Monetix {
     _configInstance = configProvider;
     _analyticsInstance = analyticsService;
     _statusInstance = statusProvider;
+    _coordinatorInstance = MonetixRequestCoordinator();
 
     isInternalConstruction = true;
     try {
@@ -213,6 +233,7 @@ class Monetix {
         configProvider: configProvider,
         statusProvider: statusProvider,
         rewardedService: _rewardedInstance!,
+        coordinator: _coordinatorInstance,
       );
 
       _instance!.gate = _gateInstance;
