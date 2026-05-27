@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import '../services/monetix_facade.dart';
@@ -117,7 +116,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(text,
           style: TextStyle(
-              color: _colors.onSurface.withOpacity(0.5),
+              color: _colors.onSurface.withValues(alpha: 0.5),
               fontSize: 11,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2)),
@@ -543,7 +542,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                       Text(
                         '${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}:${log.timestamp.second.toString().padLeft(2, '0')}.${log.timestamp.millisecond.toString().padLeft(3, '0')}',
                         style: TextStyle(
-                            color: _colors.onSurface.withOpacity(0.4),
+                            color: _colors.onSurface.withValues(alpha: 0.4),
                             fontFamily: 'monospace',
                             fontSize: 11),
                       ),
@@ -554,7 +553,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                     Text(
                       log.details.toString(),
                       style: TextStyle(
-                          color: _colors.onSurface.withOpacity(0.4),
+                          color: _colors.onSurface.withValues(alpha: 0.4),
                           fontFamily: 'monospace',
                           fontSize: 11),
                     )

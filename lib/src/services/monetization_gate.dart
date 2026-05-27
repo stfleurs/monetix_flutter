@@ -44,7 +44,6 @@ class MonetizationGate extends ChangeNotifier {
   final IAdConfigProvider _configProvider;
   final IAdStatusProvider _statusProvider;
   final RewardedMonetizationService _rewardedService;
-  final MonetixRequestCoordinator? _coordinator;
 
   IAdConfigProvider get configProvider => _configProvider;
   IAdStatusProvider get statusProvider => _statusProvider;
@@ -60,8 +59,7 @@ class MonetizationGate extends ChangeNotifier {
     MonetixRequestCoordinator? coordinator,
   })  : _configProvider = configProvider,
         _statusProvider = statusProvider,
-        _rewardedService = rewardedService,
-        _coordinator = coordinator {
+        _rewardedService = rewardedService {
     _configProvider.addListener(_onStateChanged);
     _statusProvider.addListener(_onStateChanged);
     _rewardedService.addListener(_onStateChanged);

@@ -3,6 +3,8 @@
 .packages
 .pub-cache/
 .pub/
+
+# Build output
 build/
 
 # IDE specific files
@@ -26,6 +28,5 @@ android/app/src/main/res/values/strings.xml
 # Mac specific
 .DS_Store
 
-# Web specific
-.dart_tool/
-build/
+# Temp files
+commit_msg.txt
