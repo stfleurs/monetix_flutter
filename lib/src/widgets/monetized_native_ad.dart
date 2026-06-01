@@ -61,6 +61,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   
   static const Duration _nativeFallbackTimeout = Duration(seconds: 5);
 
+  AdSize? _adaptiveSize;
+  static const double _defaultBannerHeight = 50.0;
+
   Timer? _nativeFallbackTimer;
 
   void _cancelFallbackTimer() {
@@ -72,6 +75,19 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     if (_lastFailureTime == null) return true;
     return DateTime.now().difference(_lastFailureTime!) >
         const Duration(seconds: 30);
+  }
+
+  Future<void> _ensureAdaptiveSize() async {
+    if (_adaptiveSize != null) return;
+    try {
+      final width = MediaQuery.of(context).size.width.truncate();
+      final size =
+          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+              width);
+      if (isSafe && size != null) {
+        setState(() => _adaptiveSize = size);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -98,6 +114,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     }
 
     _evaluateAdDecision();
+    _ensureAdaptiveSize();
   }
 
   void _onGateChanged() {
@@ -312,9 +329,10 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     final analyticsService = Monetix.getAnalytics(context);
     setState(() => _isBannerLoading = true);
 
-    final size = widget.templateType == TemplateType.small
-        ? AdSize.largeBanner
-        : AdSize.mediumRectangle;
+    final size = _adaptiveSize ??
+        (widget.templateType == TemplateType.small
+            ? AdSize.largeBanner
+            : AdSize.mediumRectangle);
 
     _bannerLoadStartTime = DateTime.now();
     analyticsService.logAdRequest(
@@ -417,103 +435,117 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     final simulateFailure = configProvider.simulateNativeFailure;
     final isMedium = widget.templateType == TemplateType.medium;
 
-    Widget buildContainer({required Widget child}) {
+    Widget buildHeaderBar() {
+      final configProvider = Monetix.getConfig(context);
+      final showOptOut = configProvider.enableRewardedBreak;
+      final colors = Theme.of(context).colorScheme;
+
+      return Container(
+        height: 32,
+        color: colors.surface.withValues(alpha: 0.95),
+        child: Row(
+          children: [
+            const SizedBox(width: 10),
+            Text(
+              'Ad',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: colors.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+            const Spacer(),
+            if (showOptOut)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => showRewardStatusSheet(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: colors.primary.withValues(alpha: 0.3),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.block_rounded,
+                          size: 11, color: colors.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        statusProvider.pauseAdsLabel,
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(width: 10),
+          ],
+        ),
+      );
+    }
+
+    Widget buildContainer({required Widget child, bool compact = false}) {
+      final adHeight = compact
+          ? (_adaptiveSize?.height.toDouble() ?? _defaultBannerHeight)
+          : null;
       return Container(
         margin:
             EdgeInsets.symmetric(horizontal: isMedium ? 12 : 8, vertical: 0),
-        height: isMedium ? 350 : 105,
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(isMedium ? 16 : 12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isMedium ? 0.06 : 0.04),
-              blurRadius: isMedium ? 8 : 4,
+              color: Colors.black.withValues(alpha: isMedium ? 0.08 : 0.08),
+              blurRadius: isMedium ? 8 : 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
-            color:
-                Theme.of(context).colorScheme.outline.withValues(alpha: 0.05),
+            color: Theme.of(context)
+                .colorScheme
+                .outlineVariant
+                .withValues(alpha: 0.4),
+            width: 1.0,
           ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(isMedium ? 16 : 12),
-          child: child,
-        ),
-      );
-    }
-
-    Widget buildOptOutButton() {
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => showRewardStatusSheet(context),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(isMedium ? 16 : 12),
-              topRight: Radius.circular(isMedium ? 16 : 12),
-              bottomLeft: const Radius.circular(12),
-              bottomRight: const Radius.circular(4),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.block_rounded,
-                size: 12.5,
-                color: Theme.of(context).colorScheme.onPrimary,
+              buildHeaderBar(),
+              Divider(
+                height: 1,
+                thickness: 0.8,
+                color: Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.5),
               ),
-              const SizedBox(width: 6),
-              Text(
-                statusProvider.pauseAdsLabel,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              if (compact)
+                SizedBox(height: adHeight, child: child)
+              else
+                child,
             ],
           ),
         ),
       );
     }
 
-    Widget buildAdWrapper(Widget adContent) {
-      final configProvider = Monetix.getConfig(context);
-      final showOptOut = configProvider.enableRewardedBreak;
-
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.topRight,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 11),
-                child: buildContainer(child: adContent),
-              ),
-              if (showOptOut)
-                Positioned(
-                  top: 0,
-                  right: isMedium ? 12 : 8,
-                  child: buildOptOutButton(),
-                ),
-            ],
-          ),
-        ],
-      );
+    Widget buildAdWrapper(Widget adContent, {bool compact = false}) {
+      return buildContainer(child: adContent, compact: compact);
     }
 
     final showNative =
@@ -533,10 +565,12 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
             child: AdWidget(ad: _fallbackBannerAd!),
           ),
         ),
+        compact: true,
       );
     } else {
       return buildAdWrapper(
         const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        compact: true,
       );
     }
   }

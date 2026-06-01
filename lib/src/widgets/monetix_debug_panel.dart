@@ -205,7 +205,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: TextStyle(color: _colors.onSurface.withOpacity(0.7), fontSize: 13)),
+              style: TextStyle(color: _colors.onSurface.withValues(alpha: 0.7), fontSize: 13)),
           const SizedBox(height: 6),
           Row(
             children: [
@@ -254,7 +254,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                 child: Divider(color: _colors.outlineVariant, height: 1),
               ),
               Text('Active Suppression Reasons:',
-                  style: TextStyle(color: _colors.onSurface.withOpacity(0.7), fontSize: 13)),
+                  style: TextStyle(color: _colors.onSurface.withValues(alpha: 0.7), fontSize: 13)),
               const SizedBox(height: 8),
               if (reasons.isEmpty)
                 Text('NONE',
@@ -270,9 +270,9 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             border:
-                                Border.all(color: Colors.red.withOpacity(0.3)),
+                                Border.all(color: Colors.red.withValues(alpha: 0.3)),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(r,
@@ -301,13 +301,13 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
             Icon(active ? Icons.circle : Icons.circle_outlined,
                 size: 12,
                 color:
-                    active ? Colors.orange : _colors.onSurface.withOpacity(0.3)),
+                    active ? Colors.orange : _colors.onSurface.withValues(alpha: 0.3)),
             const SizedBox(width: 6),
             Text(active ? 'ACTIVE' : 'INACTIVE',
                 style: TextStyle(
                     color: active
                         ? Colors.orange
-                        : _colors.onSurface.withOpacity(0.3),
+                        : _colors.onSurface.withValues(alpha: 0.3),
                     fontSize: 11,
                     fontWeight: FontWeight.bold)),
           ],
@@ -340,7 +340,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         const SizedBox(height: 2),
                         Text('Toggles premium feature access & ad suppression',
                             style: TextStyle(
-                                color: _colors.onSurface.withOpacity(0.5),
+                                color: _colors.onSurface.withValues(alpha: 0.5),
                                 fontSize: 12)),
                       ],
                     ),
@@ -374,7 +374,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         const SizedBox(height: 2),
                         Text('Simulate remote config toggle',
                             style: TextStyle(
-                                color: _colors.onSurface.withOpacity(0.5),
+                                color: _colors.onSurface.withValues(alpha: 0.5),
                                 fontSize: 12)),
                       ],
                     ),
@@ -408,7 +408,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         const SizedBox(height: 2),
                         Text('Instantly switch to preloaded banner',
                             style: TextStyle(
-                                color: _colors.onSurface.withOpacity(0.5),
+                                color: _colors.onSurface.withValues(alpha: 0.5),
                                 fontSize: 12)),
                       ],
                     ),
@@ -442,7 +442,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                         const SizedBox(height: 2),
                         Text('Show/Hide the "Pause Ads" button',
                             style: TextStyle(
-                                color: _colors.onSurface.withOpacity(0.5),
+                                color: _colors.onSurface.withValues(alpha: 0.5),
                                 fontSize: 12)),
                       ],
                     ),
@@ -463,7 +463,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.withOpacity(0.15),
+                        backgroundColor: Colors.orange.withValues(alpha: 0.15),
                         foregroundColor: Colors.orange,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -486,7 +486,7 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.withOpacity(0.15),
+                        backgroundColor: Colors.red.withValues(alpha: 0.15),
                         foregroundColor: Colors.red[300],
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
