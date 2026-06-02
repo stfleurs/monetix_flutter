@@ -457,6 +457,37 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Pill-style dismiss button',
+                            style: TextStyle(
+                                color: _colors.onSurface,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text(
+                            'Show pill instead of ⓧ in the ad header',
+                            style: TextStyle(
+                                color: _colors.onSurface.withValues(alpha: 0.5),
+                                fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: config.usePauseAdsPill,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: Colors.blue,
+                    onChanged: (val) {
+                      config.setUsePauseAdsPillForDebug(val);
+                    },
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [

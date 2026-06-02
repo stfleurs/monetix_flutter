@@ -56,12 +56,14 @@ class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
   bool _adsEnabled = true;
   bool _simulateNativeFailure = false;
   bool _enableRewardedBreak = true;
+  bool _usePauseAdsPill = false;
   final String _bannerId = 'ca-app-pub-3940256099942544/6300978111';
   final String _nativeId = 'ca-app-pub-3940256099942544/2247696110';
 
   @override bool get adsEnabled => _adsEnabled;
   @override bool get simulateNativeFailure => _simulateNativeFailure;
   @override bool get enableRewardedBreak => _enableRewardedBreak;
+  @override bool get usePauseAdsPill => _usePauseAdsPill;
   @override String? get bannerAdUnitId => _bannerId;
   @override String? get nativeAdUnitId => _nativeId;
   String? _interstitialId = 'ca-app-pub-3940256099942544/1033173712';
@@ -91,6 +93,10 @@ class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
   void setEnableRewardedBreakForDebug(bool value) =>
       setEnableRewardedBreak(value);
 
+  @override
+  void setUsePauseAdsPillForDebug(bool value) =>
+      setUsePauseAdsPill(value);
+
   void setAdsEnabled(bool value) {
     _adsEnabled = value;
     notifyListeners();
@@ -103,6 +109,11 @@ class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
 
   void setEnableRewardedBreak(bool value) {
     _enableRewardedBreak = value;
+    notifyListeners();
+  }
+
+  void setUsePauseAdsPill(bool value) {
+    _usePauseAdsPill = value;
     notifyListeners();
   }
 

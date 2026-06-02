@@ -223,6 +223,7 @@ class Monetix {
     List<String> testDeviceIds = const [],
     bool adsEnabled = true,
     bool enableRewardedBreak = true,
+    bool usePauseAdsPill = false,
   }) {
     if (_state != MonetixState.uninitialized) return;
 
@@ -233,6 +234,7 @@ class Monetix {
       nativeAdUnitId: nativeId,
       adsEnabled: adsEnabled,
       enableRewardedBreak: enableRewardedBreak,
+      usePauseAdsPill: usePauseAdsPill,
       testDeviceIds: testDeviceIds,
     );
 
@@ -294,6 +296,7 @@ class Monetix {
     List<String> testDeviceIds = const [],
     bool adsEnabled = true,
     bool enableRewardedBreak = true,
+    bool usePauseAdsPill = false,
   }) async {
     if (_state == MonetixState.uninitialized) {
       bootstrap(
@@ -307,6 +310,7 @@ class Monetix {
         testDeviceIds: testDeviceIds,
         adsEnabled: adsEnabled,
         enableRewardedBreak: enableRewardedBreak,
+        usePauseAdsPill: usePauseAdsPill,
       );
     }
 

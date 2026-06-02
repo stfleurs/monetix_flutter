@@ -34,9 +34,13 @@ class MockConfig extends ChangeNotifier implements IAdConfigProvider {
   @override Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);
   @override bool get simulateNativeFailure => false;
 
+  bool _usePauseAdsPill = false;
+  @override bool get usePauseAdsPill => _usePauseAdsPill;
+
   @override void setAdsEnabledForDebug(bool value) => adsEnabled = value;
   @override void setSimulateNativeFailureForDebug(bool value) {}
   @override void setEnableRewardedBreakForDebug(bool value) => enableRewardedBreak = value;
+  @override void setUsePauseAdsPillForDebug(bool value) => _usePauseAdsPill = value;
 }
 
 void main() {

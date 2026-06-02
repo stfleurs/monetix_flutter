@@ -58,7 +58,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   Brightness? _currentBrightness;
   StreamSubscription<bool>? _premiumSubscription;
   MonetizationGate? _currentGate;
-  
+
   static const Duration _nativeFallbackTimeout = Duration(seconds: 5);
 
   AdSize? _adaptiveSize;
@@ -82,8 +82,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     try {
       final width = MediaQuery.of(context).size.width.truncate();
       final size =
-          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-              width);
+          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
       if (isSafe && size != null) {
         setState(() => _adaptiveSize = size);
       }
@@ -132,7 +131,8 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     final decision = _currentGate!.evaluateNative();
 
     if (!decision.allowed) {
-      debugPrint('🛡️ [Monetix] Native ad hidden on screen "${widget.screen}" (placement: "${widget.placement}") due to reason: ${decision.reason}');
+      debugPrint(
+          '🛡️ [Monetix] Native ad hidden on screen "${widget.screen}" (placement: "${widget.placement}") due to reason: ${decision.reason}');
     }
 
     if ((_adLoaded || _bannerLoaded) &&
@@ -429,9 +429,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
       return const SizedBox.shrink();
     }
 
-    final statusProvider = Monetix.getStatus(context);
-
     final configProvider = Monetix.getConfig(context);
+    final statusProvider = Monetix.getStatus(context);
+    final usePill = configProvider.usePauseAdsPill;
     final simulateFailure = configProvider.simulateNativeFailure;
     final isMedium = widget.templateType == TemplateType.medium;
 
@@ -441,11 +441,11 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
       final colors = Theme.of(context).colorScheme;
 
       return Container(
-        height: 32,
+        height: 24,
         color: colors.surface.withValues(alpha: 0.95),
         child: Row(
           children: [
-            const SizedBox(width: 10),
+            const SizedBox(width: 6),
             Text(
               'Ad',
               style: TextStyle(
@@ -457,39 +457,60 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
             ),
             const Spacer(),
             if (showOptOut)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => showRewardStatusSheet(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: colors.primary.withValues(alpha: 0.3),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.block_rounded,
-                          size: 11, color: colors.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        statusProvider.pauseAdsLabel,
-                        style: TextStyle(
-                          color: colors.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+              usePill
+                  ? GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => showRewardStatusSheet(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: colors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: colors.primary.withValues(alpha: 0.3),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.block_rounded,
+                                size: 11, color: colors.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              statusProvider.pauseAdsLabel,
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(width: 10),
+                    )
+                  : GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => showRewardStatusSheet(context),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: colors.onSurface.withValues(alpha: 0.15),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          size: 13,
+                          color: colors.onSurface.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+            const SizedBox(width: 6),
           ],
         ),
       );
@@ -532,12 +553,9 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
                 color: Theme.of(context)
                     .colorScheme
                     .outlineVariant
-                    .withValues(alpha: 0.5),
+                    .withValues(alpha: 0.08),
               ),
-              if (compact)
-                SizedBox(height: adHeight, child: child)
-              else
-                child,
+              if (compact) SizedBox(height: adHeight, child: child) else child,
             ],
           ),
         ),
@@ -555,7 +573,15 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
         (simulateFailure || _nativeFailed);
 
     if (showNative) {
-      return buildAdWrapper(AdWidget(ad: _nativeAd!));
+      final nativeAdHeight =
+          widget.templateType == TemplateType.small ? 85.0 : 250.0;
+      return buildAdWrapper(
+        SizedBox(
+          width: double.infinity,
+          height: nativeAdHeight,
+          child: AdWidget(ad: _nativeAd!),
+        ),
+      );
     } else if (showBanner) {
       return buildAdWrapper(
         Center(

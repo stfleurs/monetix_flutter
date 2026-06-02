@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(status),
-            
+
             // Native Ad with Fallback
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -38,20 +38,20 @@ class HomeScreen extends StatelessWidget {
                 templateType: TemplateType.small,
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             _buildActionCard(
               context,
               title: 'Interstitial Ad',
               subtitle: 'Full-screen ad experience',
               icon: Icons.fullscreen,
               onTap: () => monetization.showInterstitialAd(
-                screen: 'home', 
+                screen: 'home',
                 placement: 'main_button',
               ),
             ),
-            
+
             _buildActionCard(
               context,
               title: 'Rewarded Break',
@@ -59,9 +59,9 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.card_giftcard,
               onTap: () => showRewardStatusSheet(context),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Banner Ad at bottom
             const MonetizedBannerAd(
               screen: 'home',
@@ -91,7 +91,9 @@ class HomeScreen extends StatelessWidget {
               Text(
                 status.isPremium ? 'PREMIUM ACTIVE' : 'FREE VERSION',
                 style: TextStyle(
-                  color: status.isPremium ? Colors.amber.shade800 : Colors.deepPurple,
+                  color: status.isPremium
+                      ? Colors.amber.shade800
+                      : Colors.deepPurple,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
                 ),

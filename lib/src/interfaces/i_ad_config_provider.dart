@@ -24,8 +24,15 @@ abstract class IAdConfigProvider extends Listenable {
   /// Reward Policy Configuration
   bool get enableRewardedBreak => true;
 
+  /// Show the explicit "Pause Ads" pill in the header instead of the minimal X.
+  /// Default is false (X icon).
+  bool get usePauseAdsPill => false;
+
   /// Debug/testing hook to toggle [enableRewardedBreak] at runtime.
   void setEnableRewardedBreakForDebug(bool value) {}
+
+  /// Debug/testing hook to toggle [usePauseAdsPill] at runtime.
+  void setUsePauseAdsPillForDebug(bool value) {}
 
   Duration get rewardAdFreeDuration => const Duration(minutes: 15);
   int get maxAdsPerRateLimitWindow => 2;
