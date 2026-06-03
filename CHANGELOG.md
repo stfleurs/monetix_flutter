@@ -1,3 +1,17 @@
+## 0.2.3
+- **CI/CD Reliability**: Fixed `CHANGELOG.md` parsing and strict `pub.dev` analyzer lint validation for deprecated `AdSize` method calls.
+- **Documentation**: Updated `README.md` dependency versions.
+
+## 0.2.2
+- **Hotfix**: Resolved internal CI strict-validation errors triggered by upstream `google_mobile_ads` `8.0.0` deprecations by intentionally suppressing them for maximum backward compatibility.
+
+## 0.2.1
+- **Architectural Stability**: Fixed multiple race conditions and `Completer` leaks during offline initialization, guaranteeing `_initFuture` safely unblocks retries.
+- **Data Integrity**: Enforced explicit `int` casting on `clamp()` operands in `RewardedMonetizationService` to prevent `num` type casting errors.
+- **Memory Leak Fix**: Resolved `ChangeNotifier` listener accumulation in `MonetixDebugPanel` caused by missing unregister logic during rapid widget `didChangeDependencies` updates.
+- **UI Gracefulness**: Replaced permanent loading spinners in `MonetizedNativeAd` with `SizedBox.shrink()` when an ad permanently fails to load.
+- **Testing Rigor**: Introduced a rigorous automated regression suite covering offline startups, premium suppressions, listener deduplication, gate injections, and coordinator anti-spam logic.
+
 ## 0.2.0
 - **Request Burst Prevention**: Added `MonetixRequestCoordinator` — a global scheduler that debounces gate cascades, deduplicates same-type requests, and enforces per-ad-type minimum spacing. Exposes `Monetix.debugMetrics()` for observability.
 - **Native Fallback Redesign**: Fallback banner now only loads when the native ad explicitly fails, not pre-emptively after a 5s timer. The safety timer is cancellable and cleaned up on widget disposal. Prevents guaranteed double-requests under moderate latency.

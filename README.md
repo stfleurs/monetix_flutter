@@ -188,7 +188,7 @@ Ideal for basic apps with minimal config.
 
 ```yaml
 dependencies:
-  monetix_flutter: ^0.1.8
+  monetix_flutter: ^0.2.3
 ```
 
 > [!NOTE]
