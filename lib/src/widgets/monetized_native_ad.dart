@@ -83,6 +83,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     if (_adaptiveSize != null) return;
     try {
       final width = MediaQuery.of(context).size.width.truncate();
+      // ignore: deprecated_member_use
       final size =
           await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
       if (isSafe && size != null) {
