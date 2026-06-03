@@ -9,7 +9,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = Provider.of<RevenueCatAdStatusProvider>(context);
-    final monetization = Provider.of<MonetizationService>(context);
+    final monetization = Provider.of<MonetizationService>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(

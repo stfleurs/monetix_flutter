@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/monetization_gate.dart';
 import '../services/monetix_facade.dart';
+import '../interfaces/i_ad_status_provider.dart';
 import 'reward_status_sheet.dart';
 
 mixin SafeState<T extends StatefulWidget> on State<T> {
@@ -58,6 +59,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   Brightness? _currentBrightness;
   StreamSubscription<bool>? _premiumSubscription;
   MonetizationGate? _currentGate;
+  IAdStatusProvider? _currentStatusProvider;
 
   static const Duration _nativeFallbackTimeout = Duration(seconds: 5);
 
@@ -92,18 +94,20 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final statusProvider = Monetix.getStatus(context);
-      _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
-        if (mounted) setState(() {});
-      });
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final statusProvider = Monetix.getStatus(context);
+    if (_currentStatusProvider != statusProvider) {
+      _premiumSubscription?.cancel();
+      _currentStatusProvider = statusProvider;
+      _premiumSubscription = _currentStatusProvider!.premiumStatusStream.listen((_) {
+        if (mounted) setState(() {});
+      });
+    }
 
     final adGate = Monetix.getGate(context);
     if (_currentGate != adGate) {
@@ -571,6 +575,11 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
     final showBanner = _bannerLoaded &&
         _fallbackBannerAd != null &&
         (simulateFailure || _nativeFailed);
+    final hasFailedCompletely = _nativeFailed && !_bannerLoaded && !_isBannerLoading && (_bannerRetryCount >= _maxBannerRetries);
+
+    if (hasFailedCompletely) {
+      return const SizedBox.shrink();
+    }
 
     if (showNative) {
       final nativeAdHeight =

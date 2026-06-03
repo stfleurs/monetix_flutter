@@ -102,12 +102,13 @@ class MonetizationService {
   }
 
   Future<void> _initInternal() async {
+    bool isOfflineExit = false;
     try {
       // Basic connectivity check
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult.every((r) => r == ConnectivityResult.none)) {
         isInitialized = false;
-        _initFuture = null;
+        isOfflineExit = true;
         return;
       }
 
@@ -150,7 +151,9 @@ class MonetizationService {
       debugPrint('[MonetizationService] initialize error: $e\n$st');
       isInitialized = false;
     } finally {
-      if (!_initCompleter.isCompleted) {
+      if (isOfflineExit) {
+        _initFuture = null;
+      } else if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
       }
     }

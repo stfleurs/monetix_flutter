@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/monetization_gate.dart';
 import '../services/monetix_facade.dart';
+import '../interfaces/i_ad_status_provider.dart';
 import 'monetized_native_ad.dart'; // For SafeState mixin
 import 'reward_status_sheet.dart';
 
@@ -30,22 +31,25 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   int? _loadDurationMs;
   StreamSubscription<bool>? _premiumSubscription;
   MonetizationGate? _currentGate;
+  IAdStatusProvider? _currentStatusProvider;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final statusProvider = Monetix.getStatus(context);
-      _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
-        if (mounted) setState(() {});
-      });
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final statusProvider = Monetix.getStatus(context);
+    if (_currentStatusProvider != statusProvider) {
+      _premiumSubscription?.cancel();
+      _currentStatusProvider = statusProvider;
+      _premiumSubscription = _currentStatusProvider!.premiumStatusStream.listen((_) {
+        if (mounted) setState(() {});
+      });
+    }
 
     final adGate = Monetix.getGate(context);
     if (_currentGate != adGate) {

@@ -31,15 +31,21 @@ class _MonetixWireState extends State<_MonetixWire> {
 
   void _wire() {
     if (!mounted) return;
-    Monetix.wire(
-      service: context.read<MonetizationService>(),
-      rewarded: context.read<RewardedMonetizationService>(),
-      gate: context.read<MonetizationGate>(),
-      config: context.read<IAdConfigProvider>(),
-      status: context.read<IAdStatusProvider>(),
-      analytics: context.read<IAdAnalytics>(),
-      coordinator: MonetixRequestCoordinator(),
-    );
+    try {
+      Monetix.wire(
+        service: context.read<MonetizationService>(),
+        rewarded: context.read<RewardedMonetizationService>(),
+        gate: context.read<MonetizationGate>(),
+        config: context.read<IAdConfigProvider>(),
+        status: context.read<IAdStatusProvider>(),
+        analytics: context.read<IAdAnalytics>(),
+        // Pass null so wire() reuses the coordinator already registered
+        // by a prior bootstrap() or wire() call instead of creating an orphan.
+        coordinator: null,
+      );
+    } catch (e) {
+      debugPrint('[Monetix] _wire() failed — Provider tree may have been disposed: $e');
+    }
   }
 
   @override
@@ -100,15 +106,21 @@ class MonetixPlaygroundApp extends StatelessWidget {
             service.init();
             return service;
           },
+          dispose: (_, service) => service.dispose(),
         ),
 
         // 6. Centralized Monetization Gate for UI ad visibility
         ChangeNotifierProvider<MonetizationGate>(
-          create: (context) => MonetizationGate(
-            configProvider: context.read<IAdConfigProvider>(),
-            statusProvider: context.read<IAdStatusProvider>(),
-            rewardedService: context.read<RewardedMonetizationService>(),
-          ),
+          create: (context) {
+            final gate = MonetizationGate(
+              configProvider: context.read<IAdConfigProvider>(),
+              statusProvider: context.read<IAdStatusProvider>(),
+              rewardedService: context.read<RewardedMonetizationService>(),
+            );
+            context.read<MonetizationService>().gate = gate;
+            context.read<RewardedMonetizationService>().gate = gate;
+            return gate;
+          },
         ),
       ],
       child: _MonetixWire(

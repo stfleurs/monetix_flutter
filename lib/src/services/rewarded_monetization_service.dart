@@ -341,13 +341,14 @@ class RewardedMonetizationService extends ChangeNotifier {
   }
 
   Future<void> _grantAdFreeTime() async {
-    final now = _safeNowMs();
+    final int now = _safeNowMs();
     await _recordWatch(now);
 
-    final existingExpiry = _cachedExpiryMs ?? now;
-    final baseMs = existingExpiry > now ? existingExpiry : now;
-    final maxExpiry = now + (_rewardPerAd.inMilliseconds * _maxAdsPerWindow);
-    final newExpiry = (baseMs + _rewardPerAd.inMilliseconds).clamp(0, maxExpiry);
+    final int existingExpiry = _cachedExpiryMs ?? now;
+    final int baseMs = existingExpiry > now ? existingExpiry : now;
+    final int maxExpiry = now + (_rewardPerAd.inMilliseconds * _maxAdsPerWindow);
+    // Explicit int bounds guarantee int.clamp(int, int) → int, not the wider num type.
+    final int newExpiry = (baseMs + _rewardPerAd.inMilliseconds).clamp(0, maxExpiry);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_prefExpiry, newExpiry);

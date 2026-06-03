@@ -42,6 +42,19 @@ class Monetix {
 
   static MonetixState _state = MonetixState.uninitialized;
 
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance = null;
+    _rewardedInstance = null;
+    _gateInstance = null;
+    _coordinatorInstance = null;
+    _configInstance = null;
+    _statusInstance = null;
+    _analyticsInstance = null;
+    _state = MonetixState.uninitialized;
+    isInternalConstruction = false;
+  }
+
   /// Internal flag used to suppress direct construction warnings during bootstrap.
   static bool isInternalConstruction = false;
 
@@ -54,7 +67,10 @@ class Monetix {
   /// A future that completes when the asynchronous initialization has finished
   /// (either successfully or with a timeout/failure).
   static Future<void> get ready {
-    if (_instance == null || _state == MonetixState.ready || _state == MonetixState.failed) {
+    if (_instance == null) {
+      return Future.error(StateError('Monetix not initialized. Call initialize() or bootstrap() first.'));
+    }
+    if (_state == MonetixState.ready || _state == MonetixState.failed) {
       return Future.value();
     }
     return _instance!.initialized;
@@ -197,7 +213,7 @@ class Monetix {
     required IAdAnalytics analytics,
     MonetixRequestCoordinator? coordinator,
   }) {
-    if (_state != MonetixState.uninitialized) return;
+    if (_state == MonetixState.initializing || _state == MonetixState.ready) return;
 
     _instance = service;
     _rewardedInstance = rewarded;
@@ -205,7 +221,7 @@ class Monetix {
     _configInstance = config;
     _statusInstance = status;
     _analyticsInstance = analytics;
-    _coordinatorInstance = coordinator ?? MonetixRequestCoordinator();
+    _coordinatorInstance = coordinator ?? _coordinatorInstance ?? MonetixRequestCoordinator();
 
     _state = MonetixState.bootstrapped;
   }

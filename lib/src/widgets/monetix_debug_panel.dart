@@ -47,7 +47,9 @@ class _MonetixDebugPanelState extends State<MonetixDebugPanel> {
       }
     }
 
+    Monetix.gate.removeListener(_onStateChanged);
     Monetix.gate.addListener(_onStateChanged);
+    Monetix.rewarded.removeListener(_onStateChanged);
     Monetix.rewarded.addListener(_onStateChanged);
   }
 
