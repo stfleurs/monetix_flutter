@@ -41,6 +41,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            // Interstitial Ad
             _buildActionCard(
               context,
               title: 'Interstitial Ad',
@@ -52,13 +53,14 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            _buildActionCard(
-              context,
-              title: 'Rewarded Break',
-              subtitle: 'Earn 15 minutes of zero ads',
-              icon: Icons.card_giftcard,
-              onTap: () => showRewardStatusSheet(context),
-            ),
+            if (Monetix.getConfig(context, listen: true).enableRewardedBreak)
+              _buildActionCard(
+                context,
+                title: 'Rewarded Break',
+                subtitle: 'Earn 15 minutes of zero ads',
+                icon: Icons.card_giftcard,
+                onTap: () => showRewardStatusSheet(context),
+              ),
 
             const SizedBox(height: 20),
 
