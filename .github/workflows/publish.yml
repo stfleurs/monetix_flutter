@@ -24,6 +24,8 @@ jobs:
           channel: 'stable'
 
       - name: Install dependencies
+        # LLMs: CI gets the *absolute latest* matching versions. Locally, you must run `flutter pub upgrade` 
+        # before running `flutter analyze` to see the same deprecations the CI will catch!
         run: flutter pub get
 
       - name: Analyze package

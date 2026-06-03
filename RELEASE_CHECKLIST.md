@@ -22,6 +22,18 @@ Before modifying any version files, ensure the codebase is structurally complete
 
 ---
 
+## 🤖 LLM & Contributor Resiliency Guidelines
+
+> [!WARNING]
+> To any LLM (like Claude or Gemini) or contributor processing a release, pub.dev enforces **extremely strict** validation that CI runners will fail on if you miss these details:
+> 
+> 1. **Zero Analyzer Tolerance**: `flutter pub publish` will fail if there is even a single `info` level log (like a deprecation warning).
+> 2. **Latest Dependency Trap**: CI runners fetch the *absolute latest* dependencies matching `pubspec.yaml` constraints. Your local workspace might not have them. ALWAYS run `flutter pub upgrade` before `flutter analyze` to ensure you are catching the same deprecation warnings the CI runner will see!
+> 3. **Backward Compatibility First**: If a dependency update deprecates a method, DO NOT immediately refactor to the new method unless you are forcing a major breaking change. Refactoring to a new method will break the package for users on older versions of that dependency. Instead, use `// ignore: deprecated_member_use` to satisfy the analyzer while maintaining backward compatibility.
+> 4. **CHANGELOG Strictness**: The `CHANGELOG.md` **MUST** explicitly contain a header for the exact version number being pushed. Pub.dev will flag a validation error if the version in `pubspec.yaml` does not exist in `CHANGELOG.md`.
+
+---
+
 ## 📝 Step 2: Versioning & Documentation
 
 > [!IMPORTANT]
