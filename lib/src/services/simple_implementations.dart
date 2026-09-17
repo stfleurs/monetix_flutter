@@ -33,6 +33,13 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
     notifyListeners();
   }
 
+  bool _usePauseAdsPill = false;
+  @override bool get usePauseAdsPill => _usePauseAdsPill;
+  set usePauseAdsPill(bool value) {
+    _usePauseAdsPill = value;
+    notifyListeners();
+  }
+
   @override final int maxAdsPerRateLimitWindow;
   @override final Duration rateLimitWindowDuration;
   @override final Duration cooldownBetweenAdsDuration;
@@ -43,6 +50,11 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
     _simulateNativeFailure = value;
     notifyListeners();
   }
+  @override void setAdsEnabledForDebug(bool value) => adsEnabled = value;
+  @override void setSimulateNativeFailureForDebug(bool value) => simulateNativeFailure = value;
+  @override void setEnableRewardedBreakForDebug(bool value) => enableRewardedBreak = value;
+  @override void setUsePauseAdsPillForDebug(bool value) => usePauseAdsPill = value;
+
   SimpleAdConfig({
     this.bannerAdUnitId,
     this.interstitialAdUnitId,
@@ -52,6 +64,7 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
     this.testDeviceIds = const [],
     Duration rewardAdFreeDuration = const Duration(minutes: 15),
     bool enableRewardedBreak = true,
+    bool usePauseAdsPill = false,
     this.maxAdsPerRateLimitWindow = 2,
     this.rateLimitWindowDuration = const Duration(hours: 1),
     this.cooldownBetweenAdsDuration = const Duration(seconds: 35),
@@ -59,6 +72,7 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
   }) : _adsEnabled = adsEnabled,
        _rewardAdFreeDuration = rewardAdFreeDuration,
        _enableRewardedBreak = enableRewardedBreak,
+       _usePauseAdsPill = usePauseAdsPill,
        _simulateNativeFailure = simulateNativeFailure;
 }
 
@@ -112,6 +126,9 @@ class BasicAdStatus extends ChangeNotifier implements IAdStatusProvider {
   }
 
   @override Stream<bool> get premiumStatusStream => _controller.stream;
+
+  @override
+  void setPremiumForDebug(bool value) => isPremium = value;
 
   @override
   void dispose() {

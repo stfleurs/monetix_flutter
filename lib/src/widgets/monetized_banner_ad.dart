@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/monetization_gate.dart';
 import '../services/monetix_facade.dart';
+import '../interfaces/i_ad_status_provider.dart';
 import 'monetized_native_ad.dart'; // For SafeState mixin
 import 'reward_status_sheet.dart';
 
@@ -30,22 +31,25 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   int? _loadDurationMs;
   StreamSubscription<bool>? _premiumSubscription;
   MonetizationGate? _currentGate;
+  IAdStatusProvider? _currentStatusProvider;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final statusProvider = Monetix.getStatus(context);
-      _premiumSubscription = statusProvider.premiumStatusStream.listen((_) {
-        if (mounted) setState(() {});
-      });
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final statusProvider = Monetix.getStatus(context);
+    if (_currentStatusProvider != statusProvider) {
+      _premiumSubscription?.cancel();
+      _currentStatusProvider = statusProvider;
+      _premiumSubscription = _currentStatusProvider!.premiumStatusStream.listen((_) {
+        if (mounted) setState(() {});
+      });
+    }
 
     final adGate = Monetix.getGate(context);
     if (_currentGate != adGate) {
@@ -183,64 +187,133 @@ class MonetizedBannerAdState extends State<MonetizedBannerAd>
   @override
   Widget build(BuildContext context) {
     if (_adLoaded && _bannerAd != null) {
-      final statusProvider = Monetix.getStatus(context);
       final configProvider = Monetix.getConfig(context);
+      final statusProvider = Monetix.getStatus(context);
       final showOptOut = configProvider.enableRewardedBreak;
+      final usePill = configProvider.usePauseAdsPill;
+      final colors = Theme.of(context).colorScheme;
 
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (showOptOut)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 1, right: 4),
-              child: GestureDetector(
-              onTap: () => showRewardStatusSheet(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.4),
+            width: 1.0,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header bar
+              Container(
+                height: 24,
+                color: colors.surface.withValues(alpha: 0.95),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.block_rounded,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
                     const SizedBox(width: 6),
                     Text(
-                      statusProvider.pauseAdsLabel,
+                      'Ad',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                        color: colors.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
+                    const Spacer(),
+                    if (showOptOut)
+                      usePill
+                          ? GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => showRewardStatusSheet(context),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color:
+                                      colors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: colors.primary
+                                        .withValues(alpha: 0.3),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.block_rounded,
+                                        size: 11, color: colors.primary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      statusProvider.pauseAdsLabel,
+                                      style: TextStyle(
+                                        color: colors.primary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => showRewardStatusSheet(context),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: colors.onSurface
+                                        .withValues(alpha: 0.15),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 13,
+                                  color: colors.onSurface
+                                      .withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ),
+                    const SizedBox(width: 6),
                   ],
                 ),
               ),
-            ),
+              Divider(
+                height: 1,
+                thickness: 0.5,
+                color: colors.outlineVariant.withValues(alpha: 0.08),
+              ),
+              // Banner ad
+              Center(
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
+            ],
           ),
-          SizedBox(
-            width: _bannerAd!.size.width.toDouble(),
-            height: _bannerAd!.size.height.toDouble(),
-            child: AdWidget(ad: _bannerAd!),
-          ),
-        ],
+        ),
       );
     } else {
       return const SizedBox.shrink();
     }
   }
+
 }

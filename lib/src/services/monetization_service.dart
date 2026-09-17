@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -26,6 +27,7 @@ class MonetizationService {
   StreamSubscription<bool>? _premiumSubscription;
   int _loadAttempts = 0;
   static const int _maxAttempts = 3;
+  Timer? _interstitialReloadTimer;
 
   String? _currentScreen;
   String? _currentPlacement;
@@ -63,6 +65,7 @@ class MonetizationService {
         : (_configProvider.adsEnabled && !isAdFree);
 
     if (!allowed) {
+      _interstitialReloadTimer?.cancel();
       if (_interstitialAd != null) {
         _interstitialAd!.dispose();
         _interstitialAd = null;
@@ -99,12 +102,13 @@ class MonetizationService {
   }
 
   Future<void> _initInternal() async {
+    bool isOfflineExit = false;
     try {
       // Basic connectivity check
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult.every((r) => r == ConnectivityResult.none)) {
         isInitialized = false;
-        _initFuture = null;
+        isOfflineExit = true;
         return;
       }
 
@@ -147,7 +151,9 @@ class MonetizationService {
       debugPrint('[MonetizationService] initialize error: $e\n$st');
       isInitialized = false;
     } finally {
-      if (!_initCompleter.isCompleted) {
+      if (isOfflineExit) {
+        _initFuture = null;
+      } else if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
       }
     }
@@ -159,6 +165,7 @@ class MonetizationService {
         _isPremium = isPremium;
         
         if (isAdFree) {
+          _interstitialReloadTimer?.cancel();
           if (_interstitialAd != null) {
             _interstitialAd!.dispose();
             _interstitialAd = null;
@@ -265,7 +272,7 @@ class MonetizationService {
         ad.dispose();
         if (_interstitialAd == ad) _interstitialAd = null;
         _hasLoggedImpression = false;
-        loadInterstitialAd();
+        _scheduleInterstitialReload();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         _analyticsService?.logAdFailure(
@@ -278,7 +285,7 @@ class MonetizationService {
         ad.dispose();
         if (_interstitialAd == ad) _interstitialAd = null;
         _hasLoggedImpression = false;
-        loadInterstitialAd();
+        _scheduleInterstitialReload();
       },
     );
 
@@ -318,11 +325,21 @@ class MonetizationService {
         debugPrint('[MonetizationService] show interstitial exception: $e');
         _interstitialAd?.dispose();
         _interstitialAd = null;
-        loadInterstitialAd();
+        _scheduleInterstitialReload();
       }
     } else {
       loadInterstitialAd();
     }
+  }
+
+  /// Schedules an interstitial reload with a jittered cooldown (2–5s)
+  /// to desynchronize burst triggers from gate cascades, rapid navigation,
+  /// or transient SDK instability.
+  void _scheduleInterstitialReload() {
+    _interstitialReloadTimer?.cancel();
+    // Base 2s + random 0–3s jitter → 2–5s range.
+    final jitter = Duration(milliseconds: 2000 + Random().nextInt(3001));
+    _interstitialReloadTimer = Timer(jitter, loadInterstitialAd);
   }
 
   Future<void> _handleConsent() async {
@@ -373,6 +390,7 @@ class MonetizationService {
   }
 
   void dispose() {
+    _interstitialReloadTimer?.cancel();
     _configProvider.removeListener(_onConfigChanged);
     _interstitialAd?.dispose();
     _premiumSubscription?.cancel();

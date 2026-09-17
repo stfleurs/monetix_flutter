@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:monetix_flutter/monetix_flutter.dart';
 
-class RevenueCatAdStatusProvider extends ChangeNotifier implements IAdStatusProvider {
+class RevenueCatAdStatusProvider extends BasicAdStatus {
   bool _isPremium = false;
   final _controller = StreamController<bool>.broadcast();
 
@@ -49,7 +49,7 @@ class RevenueCatAdStatusProvider extends ChangeNotifier implements IAdStatusProv
   @override String get cooldownLabel => "Please wait a moment";
 }
 
-class DebugAdConfig extends ChangeNotifier implements IAdConfigProvider {
+class DebugAdConfig extends SimpleAdConfig {
   bool _adsEnabled = true;
   bool _simulateNativeFailure = false;
   bool _enableRewardedBreak = true;

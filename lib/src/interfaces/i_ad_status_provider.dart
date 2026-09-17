@@ -4,6 +4,11 @@ abstract class IAdStatusProvider extends Listenable {
   /// Returns true if the user has purchased a premium/pro version and should not see ads.
   bool get isPremium;
 
+  /// Debug/testing hook to toggle premium at runtime.
+  /// Default is a no-op; implementations that support runtime mutation
+  /// (e.g. BasicAdStatus) should override this.
+  void setPremiumForDebug(bool value) {}
+
   /// A stream of premium status changes.
   Stream<bool> get premiumStatusStream;
   

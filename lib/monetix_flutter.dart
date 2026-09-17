@@ -11,6 +11,8 @@ export 'src/services/rewarded_monetization_service.dart';
 export 'src/services/simple_implementations.dart';
 export 'src/services/monetization_gate.dart';
 export 'src/services/monetix_facade.dart';
+export 'src/services/monetix_request_coordinator.dart';
+export 'src/services/diagnostic_ad_analytics.dart';
 
 // Widgets
 export 'src/widgets/monetized_native_ad.dart';

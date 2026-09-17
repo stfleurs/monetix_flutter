@@ -5,8 +5,10 @@ import '../interfaces/i_ad_config_provider.dart';
 import '../interfaces/i_ad_status_provider.dart';
 import 'monetization_gate.dart';
 import 'monetization_service.dart';
+import 'monetix_request_coordinator.dart';
 import 'rewarded_monetization_service.dart';
 import 'simple_implementations.dart';
+import 'diagnostic_ad_analytics.dart';
 
 /// The lifecycle and synchronization state of the Monetix framework.
 enum MonetixState {
@@ -32,12 +34,26 @@ class Monetix {
   static MonetizationService? _instance;
   static RewardedMonetizationService? _rewardedInstance;
   static MonetizationGate? _gateInstance;
+  static MonetixRequestCoordinator? _coordinatorInstance;
 
   static IAdConfigProvider? _configInstance;
   static IAdStatusProvider? _statusInstance;
   static IAdAnalytics? _analyticsInstance;
 
   static MonetixState _state = MonetixState.uninitialized;
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance = null;
+    _rewardedInstance = null;
+    _gateInstance = null;
+    _coordinatorInstance = null;
+    _configInstance = null;
+    _statusInstance = null;
+    _analyticsInstance = null;
+    _state = MonetixState.uninitialized;
+    isInternalConstruction = false;
+  }
 
   /// Internal flag used to suppress direct construction warnings during bootstrap.
   static bool isInternalConstruction = false;
@@ -51,7 +67,10 @@ class Monetix {
   /// A future that completes when the asynchronous initialization has finished
   /// (either successfully or with a timeout/failure).
   static Future<void> get ready {
-    if (_instance == null || _state == MonetixState.ready || _state == MonetixState.failed) {
+    if (_instance == null) {
+      return Future.error(StateError('Monetix not initialized. Call initialize() or bootstrap() first.'));
+    }
+    if (_state == MonetixState.ready || _state == MonetixState.failed) {
       return Future.value();
     }
     return _instance!.initialized;
@@ -79,6 +98,14 @@ class Monetix {
       throw StateError('Monetix not initialized. Call initialize() or bootstrap() first.');
     }
     return _gateInstance!;
+  }
+
+  /// The global [MonetixRequestCoordinator] instance.
+  static MonetixRequestCoordinator get coordinator {
+    if (_coordinatorInstance == null) {
+      throw StateError('Monetix not initialized. Call initialize() or bootstrap() first.');
+    }
+    return _coordinatorInstance!;
   }
 
   /// The global [IAdConfigProvider] instance.
@@ -161,6 +188,44 @@ class Monetix {
     }
   }
 
+  /// Returns a structured debug snapshot of the coordinator's request metrics.
+  /// Useful for debugging, QA screenshots, and verifying burst suppression.
+  ///
+  /// Returns `null` if Monetix has not been bootstrapped.
+  static Map<String, dynamic>? debugMetrics() {
+    if (_coordinatorInstance == null) return null;
+    return _coordinatorInstance!.metrics.toMap();
+  }
+
+  /// Wires externally-created instances into the static facade, allowing
+  /// the debug panel and coordinator to reference them without going through
+  /// Provider.  Call this after creating your Provider tree.
+  ///
+  /// Unlike [bootstrap], this does not create new instances — it adopts
+  /// the ones you pass in.  Safe to call multiple times; subsequent calls
+  /// are no-ops after the first.
+  static void wire({
+    required MonetizationService service,
+    required RewardedMonetizationService rewarded,
+    required MonetizationGate gate,
+    required IAdConfigProvider config,
+    required IAdStatusProvider status,
+    required IAdAnalytics analytics,
+    MonetixRequestCoordinator? coordinator,
+  }) {
+    if (_state == MonetixState.initializing || _state == MonetixState.ready) return;
+
+    _instance = service;
+    _rewardedInstance = rewarded;
+    _gateInstance = gate;
+    _configInstance = config;
+    _statusInstance = status;
+    _analyticsInstance = analytics;
+    _coordinatorInstance = coordinator ?? _coordinatorInstance ?? MonetixRequestCoordinator();
+
+    _state = MonetixState.bootstrapped;
+  }
+
   /// Synchronously bootstraps and prepares all singleton instances.
   /// This registers all core services synchronously to prevent `StateError`s during startup.
   static void bootstrap({
@@ -174,6 +239,7 @@ class Monetix {
     List<String> testDeviceIds = const [],
     bool adsEnabled = true,
     bool enableRewardedBreak = true,
+    bool usePauseAdsPill = false,
   }) {
     if (_state != MonetixState.uninitialized) return;
 
@@ -184,15 +250,24 @@ class Monetix {
       nativeAdUnitId: nativeId,
       adsEnabled: adsEnabled,
       enableRewardedBreak: enableRewardedBreak,
+      usePauseAdsPill: usePauseAdsPill,
       testDeviceIds: testDeviceIds,
     );
 
-    final analyticsService = analytics ?? ConsoleAdAnalytics();
+    IAdAnalytics analyticsService = analytics ?? ConsoleAdAnalytics();
+    
+    // Automatically wrap analytics for diagnostics in debug mode
+    assert(() {
+      analyticsService = DiagnosticAdAnalytics(analyticsService);
+      return true;
+    }());
+    
     final statusProvider = status ?? BasicAdStatus();
 
     _configInstance = configProvider;
     _analyticsInstance = analyticsService;
     _statusInstance = statusProvider;
+    _coordinatorInstance = MonetixRequestCoordinator();
 
     isInternalConstruction = true;
     try {
@@ -215,6 +290,7 @@ class Monetix {
         configProvider: configProvider,
         statusProvider: statusProvider,
         rewardedService: _rewardedInstance!,
+        coordinator: _coordinatorInstance,
       );
 
       _instance!.gate = _gateInstance;
@@ -238,6 +314,7 @@ class Monetix {
     List<String> testDeviceIds = const [],
     bool adsEnabled = true,
     bool enableRewardedBreak = true,
+    bool usePauseAdsPill = false,
   }) async {
     if (_state == MonetixState.uninitialized) {
       bootstrap(
@@ -251,6 +328,7 @@ class Monetix {
         testDeviceIds: testDeviceIds,
         adsEnabled: adsEnabled,
         enableRewardedBreak: enableRewardedBreak,
+        usePauseAdsPill: usePauseAdsPill,
       );
     }
 
