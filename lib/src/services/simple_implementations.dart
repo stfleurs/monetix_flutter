@@ -55,6 +55,13 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
   @override void setEnableRewardedBreakForDebug(bool value) => enableRewardedBreak = value;
   @override void setUsePauseAdsPillForDebug(bool value) => usePauseAdsPill = value;
 
+  Duration _nativeAdAutoRefreshInterval;
+  @override Duration get nativeAdAutoRefreshInterval => _nativeAdAutoRefreshInterval;
+  set nativeAdAutoRefreshInterval(Duration value) {
+    _nativeAdAutoRefreshInterval = value;
+    notifyListeners();
+  }
+
   SimpleAdConfig({
     this.bannerAdUnitId,
     this.interstitialAdUnitId,
@@ -65,6 +72,7 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
     Duration rewardAdFreeDuration = const Duration(minutes: 15),
     bool enableRewardedBreak = true,
     bool usePauseAdsPill = false,
+    Duration nativeAdAutoRefreshInterval = const Duration(seconds: 60),
     this.maxAdsPerRateLimitWindow = 2,
     this.rateLimitWindowDuration = const Duration(hours: 1),
     this.cooldownBetweenAdsDuration = const Duration(seconds: 35),
@@ -73,6 +81,7 @@ class SimpleAdConfig extends ChangeNotifier implements IAdConfigProvider {
        _rewardAdFreeDuration = rewardAdFreeDuration,
        _enableRewardedBreak = enableRewardedBreak,
        _usePauseAdsPill = usePauseAdsPill,
+       _nativeAdAutoRefreshInterval = nativeAdAutoRefreshInterval,
        _simulateNativeFailure = simulateNativeFailure;
 }
 

@@ -38,4 +38,9 @@ abstract class IAdConfigProvider extends Listenable {
   int get maxAdsPerRateLimitWindow => 2;
   Duration get rateLimitWindowDuration => const Duration(hours: 1);
   Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);
+
+  /// Auto-refresh interval for active native ads.
+  /// Set to [Duration.zero] or null-equivalent to disable periodic refresh.
+  /// Must be at least 30 seconds to adhere to AdMob policy if enabled.
+  Duration get nativeAdAutoRefreshInterval => const Duration(seconds: 60);
 }

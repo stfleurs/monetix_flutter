@@ -67,10 +67,32 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   static const double _defaultBannerHeight = 50.0;
 
   Timer? _nativeFallbackTimer;
+  Timer? _autoRefreshTimer;
 
   void _cancelFallbackTimer() {
     _nativeFallbackTimer?.cancel();
     _nativeFallbackTimer = null;
+  }
+
+  void _cancelAutoRefreshTimer() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = null;
+  }
+
+  void _scheduleAutoRefresh() {
+    _cancelAutoRefreshTimer();
+    final configProvider = Monetix.getConfig(context);
+    final interval = configProvider.nativeAdAutoRefreshInterval;
+    if (interval == Duration.zero || interval.inSeconds < 30) return;
+
+    _autoRefreshTimer = Timer(interval, () {
+      if (!isSafe) return;
+      final decision = _currentGate?.evaluateNative();
+      if (decision?.allowed == true && configProvider.adsEnabled && !_isLoading && !_isBannerLoading) {
+        _disposeAds();
+        _loadNativeAd();
+      }
+    });
   }
 
   bool _canRetry() {
@@ -164,6 +186,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
 
   void _disposeAds() {
     _cancelFallbackTimer();
+    _cancelAutoRefreshTimer();
     _nativeAd?.dispose();
     _fallbackBannerAd?.dispose();
     _nativeAd = null;
@@ -233,6 +256,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
               _adLoaded = true;
               _isLoading = false;
             });
+            _scheduleAutoRefresh();
           },
           onAdImpression: (ad) {
             if (!_hasLoggedImpression) {
@@ -417,6 +441,7 @@ class MonetizedNativeAdState extends State<MonetizedNativeAd>
   @override
   void dispose() {
     _cancelFallbackTimer();
+    _cancelAutoRefreshTimer();
     _premiumSubscription?.cancel();
     _currentGate?.removeListener(_onGateChanged);
     _nativeAd?.dispose();

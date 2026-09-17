@@ -1,6 +1,7 @@
 ## 0.2.4
 - **Lifecycle Coordination**: Synchronized `RewardedMonetizationService` with `MonetizationService` initialization to prevent premature ad requests while Mobile Ads SDK and mediation adapters are initializing.
 - **Exponential Retry Mechanism**: Added automatic exponential backoff retries (5s, 10s, 15s) upon load failures to gracefully recover from transient network and fill errors.
+- **Native Ad Auto-Refresh**: Added policy-compliant periodic auto-refresh (`nativeAdAutoRefreshInterval`) in `MonetizedNativeAd` and `IAdConfigProvider` (default: 60s).
 - **Testing Helpers**: Added `grantRewardForTesting` and `expireRewardForTesting` assert-gated helper methods.
 
 ## 0.2.3
