@@ -209,6 +209,8 @@ class Monetix {
         rewardedAdService: _rewardedInstance,
       );
 
+      _rewardedInstance!.monetizationService = _instance;
+
       _gateInstance = MonetizationGate(
         configProvider: configProvider,
         statusProvider: statusProvider,

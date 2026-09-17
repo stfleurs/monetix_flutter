@@ -27,10 +27,17 @@ class RewardedMonetizationService extends ChangeNotifier {
   int get _maxAdsPerWindow => _configProvider.maxAdsPerRateLimitWindow;
 
   final IAdConfigProvider _configProvider;
-  final MonetizationService? _monetizationService;
+  MonetizationService? _monetizationService;
+  set monetizationService(MonetizationService? service) {
+    _monetizationService = service;
+  }
   final IAdAnalytics? _analyticsService;
   final IAdStatusProvider? _statusProvider;
   MonetizationGate? gate;
+
+  int _loadAttempts = 0;
+  static const int _maxAttempts = 3;
+  Timer? _reloadTimer;
   
   RewardedAd? _rewardedAd;
   bool _isLoading = false;
@@ -212,8 +219,10 @@ class RewardedMonetizationService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    _monetizationService ??= (Monetix.state != MonetixState.uninitialized ? Monetix.instance : null);
+
     if (_monetizationService != null) {
-      await _monetizationService.initialized;
+      await _monetizationService!.initialized;
     }
 
     final adUnitId = _adUnitId;
@@ -224,17 +233,20 @@ class RewardedMonetizationService extends ChangeNotifier {
       placement: 'rewarded_break',
     );
 
+    _loadAttempts++;
     final startTime = _nowProvider();
     await RewardedAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
-      onAdLoaded: (ad) {
-        _lastLoadDurationMs = _nowProvider().difference(startTime).inMilliseconds;
-        _rewardedAd = ad;
-        _isLoading = false;
-        notifyListeners();
-      },
+        onAdLoaded: (ad) {
+          _lastLoadDurationMs = _nowProvider().difference(startTime).inMilliseconds;
+          _rewardedAd = ad;
+          _isLoading = false;
+          _loadAttempts = 0;
+          _reloadTimer?.cancel();
+          notifyListeners();
+        },
         onAdFailedToLoad: (error) {
           _analyticsService?.logAdFailure(
             adType: 'rewarded',
@@ -246,6 +258,13 @@ class RewardedMonetizationService extends ChangeNotifier {
           _rewardedAd = null;
           _isLoading = false;
           notifyListeners();
+
+          if (_loadAttempts < _maxAttempts) {
+            _reloadTimer?.cancel();
+            _reloadTimer = Timer(Duration(seconds: 5 * _loadAttempts), () {
+              loadRewardedAd();
+            });
+          }
         },
       ),
     );
@@ -395,6 +414,7 @@ class RewardedMonetizationService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _reloadTimer?.cancel();
     _configProvider.removeListener(_onConfigChanged);
     _expiryTimer?.cancel();
     _rewardedAd?.dispose();
