@@ -35,7 +35,11 @@ jobs:
         run: flutter test
 
       - name: Verify pub.dev publishing constraints
-        run: flutter pub publish --dry-run
+        run: |
+          git checkout -- .
+          flutter pub publish --dry-run
 
       - name: Publish package
-        run: flutter pub publish --force
+        run: |
+          git checkout -- .
+          flutter pub publish --force
