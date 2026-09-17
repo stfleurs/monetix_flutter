@@ -1,3 +1,8 @@
+## 0.2.4
+- **Lifecycle Coordination**: Synchronized `RewardedMonetizationService` with `MonetizationService` initialization to prevent premature ad requests while Mobile Ads SDK and mediation adapters are initializing.
+- **Exponential Retry Mechanism**: Added automatic exponential backoff retries (5s, 10s, 15s) upon load failures to gracefully recover from transient network and fill errors.
+- **Testing Helpers**: Added `grantRewardForTesting` and `expireRewardForTesting` assert-gated helper methods.
+
 ## 0.1.9
 - **Non-Blocking Initialization**: Restructured setup into synchronous `Monetix.bootstrap(...)` and asynchronous `Monetix.initialize(...)` to resolve heavy startup bottlenecks and Android `DeadObjectException` emulator crashes.
 - **State & Readiness Engine**: Introduced `MonetixState` enum and `state`, `isReady`, and `ready` future properties to natively support offline fallback and graceful degraded ad states.
