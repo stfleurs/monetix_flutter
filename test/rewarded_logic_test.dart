@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetix_flutter/monetix_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_mobile_ads/src/ad_instance_manager.dart';
+
 
 class MockConfig extends SimpleAdConfig {
   @override String? get bannerAdUnitId => null;
@@ -32,6 +32,14 @@ class MockConfig extends SimpleAdConfig {
   @override Duration get rateLimitWindowDuration => const Duration(hours: 1);
   @override Duration get cooldownBetweenAdsDuration => const Duration(seconds: 35);
   @override bool get simulateNativeFailure => false;
+
+  bool _usePauseAdsPill = false;
+  @override bool get usePauseAdsPill => _usePauseAdsPill;
+
+  @override void setAdsEnabledForDebug(bool value) => adsEnabled = value;
+  @override void setSimulateNativeFailureForDebug(bool value) {}
+  @override void setEnableRewardedBreakForDebug(bool value) => enableRewardedBreak = value;
+  @override void setUsePauseAdsPillForDebug(bool value) => _usePauseAdsPill = value;
 }
 
 void main() {
@@ -47,7 +55,6 @@ void main() {
   // Mock Google Mobile Ads
   final MethodChannel adsChannel = MethodChannel(
     'plugins.flutter.io/google_mobile_ads',
-    StandardMethodCodec(AdMessageCodec()),
   );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(adsChannel, (MethodCall methodCall) async {
     return null;
@@ -56,7 +63,6 @@ void main() {
   // Mock Google Mobile Ads UMP / Consent
   final MethodChannel umpChannel = MethodChannel(
     'plugins.flutter.io/google_mobile_ads/ump',
-    StandardMethodCodec(AdMessageCodec()),
   );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(umpChannel, (MethodCall methodCall) async {
     if (methodCall.method == 'ConsentInformation#canRequestAds') {

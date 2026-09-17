@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:monetix_flutter/monetix_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/revenue_cat_ad_status_provider.dart';
-import 'debug_panel_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,7 +9,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = Provider.of<RevenueCatAdStatusProvider>(context);
-    final monetization = Provider.of<MonetizationService>(context);
+    final monetization = Provider.of<MonetizationService>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -20,20 +19,16 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.bug_report_outlined),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const DebugPanelScreen()),
+              MaterialPageRoute(builder: (_) => const MonetixDebugPanel()),
             ),
           ),
         ],
-      ),
-      floatingActionButton: const MonetixAdminGate(
-        showIf: true, // Always show in playground
-        child: MonetixDebugButton(),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             _buildHeader(status),
-            
+
             // Native Ad with Fallback
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -43,30 +38,32 @@ class HomeScreen extends StatelessWidget {
                 templateType: TemplateType.small,
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
+            // Interstitial Ad
             _buildActionCard(
               context,
               title: 'Interstitial Ad',
               subtitle: 'Full-screen ad experience',
               icon: Icons.fullscreen,
               onTap: () => monetization.showInterstitialAd(
-                screen: 'home', 
+                screen: 'home',
                 placement: 'main_button',
               ),
             ),
-            
-            _buildActionCard(
-              context,
-              title: 'Rewarded Break',
-              subtitle: 'Earn 15 minutes of zero ads',
-              icon: Icons.card_giftcard,
-              onTap: () => showRewardStatusSheet(context),
-            ),
-            
+
+            if (Monetix.getConfig(context, listen: true).enableRewardedBreak)
+              _buildActionCard(
+                context,
+                title: 'Rewarded Break',
+                subtitle: 'Earn 15 minutes of zero ads',
+                icon: Icons.card_giftcard,
+                onTap: () => showRewardStatusSheet(context),
+              ),
+
             const SizedBox(height: 20),
-            
+
             // Banner Ad at bottom
             const MonetizedBannerAd(
               screen: 'home',
@@ -96,7 +93,9 @@ class HomeScreen extends StatelessWidget {
               Text(
                 status.isPremium ? 'PREMIUM ACTIVE' : 'FREE VERSION',
                 style: TextStyle(
-                  color: status.isPremium ? Colors.amber.shade800 : Colors.deepPurple,
+                  color: status.isPremium
+                      ? Colors.amber.shade800
+                      : Colors.deepPurple,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
                 ),

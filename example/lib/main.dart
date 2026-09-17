@@ -11,6 +11,47 @@ void main() {
   runApp(const MonetixPlaygroundApp());
 }
 
+/// Captures Provider-resolved instances and wires them into the static
+/// [Monetix] facade so debug panels and coordinator can access them
+/// without being descendants of this Provider tree.
+class _MonetixWire extends StatefulWidget {
+  final Widget child;
+  const _MonetixWire({required this.child});
+
+  @override
+  State<_MonetixWire> createState() => _MonetixWireState();
+}
+
+class _MonetixWireState extends State<_MonetixWire> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _wire());
+  }
+
+  void _wire() {
+    if (!mounted) return;
+    try {
+      Monetix.wire(
+        service: context.read<MonetizationService>(),
+        rewarded: context.read<RewardedMonetizationService>(),
+        gate: context.read<MonetizationGate>(),
+        config: context.read<IAdConfigProvider>(),
+        status: context.read<IAdStatusProvider>(),
+        analytics: context.read<IAdAnalytics>(),
+        // Pass null so wire() reuses the coordinator already registered
+        // by a prior bootstrap() or wire() call instead of creating an orphan.
+        coordinator: null,
+      );
+    } catch (e) {
+      debugPrint('[Monetix] _wire() failed — Provider tree may have been disposed: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class MonetixPlaygroundApp extends StatelessWidget {
   const MonetixPlaygroundApp({super.key});
 
@@ -38,9 +79,9 @@ class MonetixPlaygroundApp extends StatelessWidget {
           update: (_, config, __) => config,
         ),
         
-        // 3. Analytics Provider
+        // 3. Analytics Provider (wrapped in DiagnosticAdAnalytics for timeline)
         Provider<IAdAnalytics>(
-          create: (_) => PlaygroundAnalytics(),
+          create: (_) => DiagnosticAdAnalytics(PlaygroundAnalytics()),
         ),
         
         // 4. Rewarded Service
@@ -65,22 +106,30 @@ class MonetixPlaygroundApp extends StatelessWidget {
             service.init();
             return service;
           },
+          dispose: (_, service) => service.dispose(),
         ),
 
         // 6. Centralized Monetization Gate for UI ad visibility
         ChangeNotifierProvider<MonetizationGate>(
-          create: (context) => MonetizationGate(
-            configProvider: context.read<IAdConfigProvider>(),
-            statusProvider: context.read<IAdStatusProvider>(),
-            rewardedService: context.read<RewardedMonetizationService>(),
-          ),
+          create: (context) {
+            final gate = MonetizationGate(
+              configProvider: context.read<IAdConfigProvider>(),
+              statusProvider: context.read<IAdStatusProvider>(),
+              rewardedService: context.read<RewardedMonetizationService>(),
+            );
+            context.read<MonetizationService>().gate = gate;
+            context.read<RewardedMonetizationService>().gate = gate;
+            return gate;
+          },
         ),
       ],
-      child: MaterialApp(
-        title: 'Monetix Playground',
-        debugShowCheckedModeBanner: false,
-        theme: _buildPremiumTheme(),
-        home: const HomeScreen(),
+      child: _MonetixWire(
+        child: MaterialApp(
+          title: 'Monetix Playground',
+          debugShowCheckedModeBanner: false,
+          theme: _buildPremiumTheme(),
+          home: const HomeScreen(),
+        ),
       ),
     );
   }

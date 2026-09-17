@@ -25,6 +25,9 @@ class RevenueCatAdStatusProvider extends BasicAdStatus {
   }
 
   @override
+  void setPremiumForDebug(bool value) => simulateSubscriptionActive(value);
+
+  @override
   void showPurchaseScreen(dynamic context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('💰 RevenueCat Paywall would open here')),
@@ -53,12 +56,14 @@ class DebugAdConfig extends SimpleAdConfig {
   bool _adsEnabled = true;
   bool _simulateNativeFailure = false;
   bool _enableRewardedBreak = true;
+  bool _usePauseAdsPill = false;
   final String _bannerId = 'ca-app-pub-3940256099942544/6300978111';
   final String _nativeId = 'ca-app-pub-3940256099942544/2247696110';
 
   @override bool get adsEnabled => _adsEnabled;
   @override bool get simulateNativeFailure => _simulateNativeFailure;
   @override bool get enableRewardedBreak => _enableRewardedBreak;
+  @override bool get usePauseAdsPill => _usePauseAdsPill;
   @override String? get bannerAdUnitId => _bannerId;
   @override String? get nativeAdUnitId => _nativeId;
   String? _interstitialId = 'ca-app-pub-3940256099942544/1033173712';
@@ -77,6 +82,21 @@ class DebugAdConfig extends SimpleAdConfig {
   }
   @override List<String> get testDeviceIds => [];
 
+  @override
+  void setAdsEnabledForDebug(bool value) => setAdsEnabled(value);
+
+  @override
+  void setSimulateNativeFailureForDebug(bool value) =>
+      setSimulateNativeFailure(value);
+
+  @override
+  void setEnableRewardedBreakForDebug(bool value) =>
+      setEnableRewardedBreak(value);
+
+  @override
+  void setUsePauseAdsPillForDebug(bool value) =>
+      setUsePauseAdsPill(value);
+
   void setAdsEnabled(bool value) {
     _adsEnabled = value;
     notifyListeners();
@@ -89,6 +109,11 @@ class DebugAdConfig extends SimpleAdConfig {
 
   void setEnableRewardedBreak(bool value) {
     _enableRewardedBreak = value;
+    notifyListeners();
+  }
+
+  void setUsePauseAdsPill(bool value) {
+    _usePauseAdsPill = value;
     notifyListeners();
   }
 
